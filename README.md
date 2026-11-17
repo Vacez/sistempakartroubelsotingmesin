@@ -41,7 +41,7 @@ Berikut adalah daftar akun kredensial yang dapat digunakan untuk masuk ke dalam 
 | **Teknisi** | `Teknisi` | `Teknisi1` | Rian Kurniawan | ENG-VVO-2021-019 (Lead) | **Memproses Antrean**: Menerima antrean (`Ambil Penanganan`), input tindakan teknisi, input penggantian spare part, dan konfirmasi selesai. *Tidak membuat antrean.* |
 | **Operator** | `operator.dispensing` | `Dispensing2026` | Dimas Pratama | EMP-VVO-2025-112 (Shift 1) | **Membuat Antrean**: Operator khusus lini dispensing lem perekat smartphone (Mesin AGM). |
 | **Operator** | `operator.qc` | `Airtight2026` | Siti Nurhaliza | QC-VVO-2024-044 (Shift 2) | **Membuat Antrean**: Operator pengujian kedap air & ketahanan tekanan (Mesin AirTightness). |
-| **Supervisor** | `supervisor` | `Supervisor2026` | Hendra Wijaya | SPV-VVO-2019-003 (All Shifts) | **Hanya Dapat Melihat (Read-Only)**: Monitoring antrean perbaikan, audit durasi teknisi, dan melihat detail SPK. *Tidak dapat membuat, mengambil, atau mengubah status tiket.* |
+| **Admin** | `Admin` | `Admin1` | Hendra Wijaya | ADM-VVO-2019-001 (All Shifts) | **Kelola Operator & Monitoring**: Menambah data operator baru, mengatur akun personel, dan memantau antrean perbaikan (Read-Only tiket teknisi). |
 
 ---
 

@@ -4,7 +4,8 @@ import {
   Wrench, 
   Factory, 
   LogOut, 
-  User
+  User,
+  Users
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -12,9 +13,10 @@ export default function Navbar({
   setActiveTab, 
   currentUser, 
   onLogout, 
-  pendingTicketsCount = 0 
+  pendingTicketsCount = 0,
+  usersCount = 0
 }) {
-  // Hanya menu operasional lini produksi (Menu database & diagram UML dihapus sesuai permintaan)
+  // Menu operasional: jika Admin, tampilkan menu "Kelola Operator"
   const navTabs = [
     { id: 'diagnosa', label: 'Diagnosa Mesin', icon: Activity },
     { 
@@ -23,6 +25,14 @@ export default function Navbar({
       icon: Wrench, 
       count: pendingTicketsCount 
     },
+    ...(currentUser?.role === 'Admin' ? [
+      { 
+        id: 'pengguna', 
+        label: 'Kelola Operator', 
+        icon: Users,
+        count: usersCount
+      }
+    ] : []),
     { id: 'studi-kasus', label: 'Profil Mesin Pabrik', icon: Factory },
   ];
 
@@ -61,12 +71,12 @@ export default function Navbar({
               Wewenang:{' '}
               <strong className={
                 currentUser?.role === 'Teknisi' ? 'text-amber-400' :
-                currentUser?.role === 'Supervisor' ? 'text-purple-300' :
+                currentUser?.role === 'Admin' ? 'text-purple-300' :
                 'text-blue-400'
               }>
                 {currentUser?.role === 'Operator' ? 'Membuat Antrean' :
                  currentUser?.role === 'Teknisi' ? 'Memproses Antrean' :
-                 'Hanya Melihat'}
+                 'Kelola Operator & Monitoring'}
               </strong>
             </span>
             <span className="text-slate-600">|</span>
@@ -108,12 +118,12 @@ export default function Navbar({
                   <span>{currentUser?.nama}</span>
                   <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${
                     currentUser?.role === 'Teknisi' ? 'bg-amber-50 text-amber-800 border-amber-200' :
-                    currentUser?.role === 'Supervisor' ? 'bg-purple-50 text-purple-800 border-purple-200' :
+                    currentUser?.role === 'Admin' ? 'bg-purple-50 text-purple-800 border-purple-200' :
                     'bg-blue-50 text-blue-800 border-blue-200'
                   }`}>
                     {currentUser?.role === 'Operator' ? 'Operator • Buat Antrean' :
                      currentUser?.role === 'Teknisi' ? 'Teknisi • Proses Antrean' :
-                     'Supervisor • Hanya Lihat'}
+                     'Admin • Kelola Operator'}
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-500 font-mono mt-0.5">
@@ -124,7 +134,7 @@ export default function Navbar({
 
             <button
               onClick={onLogout}
-              className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5 font-medium"
+              className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5 font-medium cursor-pointer"
               title="Ganti Akun / Logout"
             >
               <LogOut className="w-3.5 h-3.5 text-slate-500" />
@@ -142,7 +152,7 @@ export default function Navbar({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
                   isActive
                     ? 'bg-slate-900 text-white shadow-sm'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -152,6 +162,7 @@ export default function Navbar({
                 <span>{tab.label}</span>
                 {tab.count !== undefined && tab.count > 0 && (
                   <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
+                    tab.id === 'pengguna' ? 'bg-purple-100 text-purple-800' :
                     isActive ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-700'
                   }`}>
                     {tab.count}

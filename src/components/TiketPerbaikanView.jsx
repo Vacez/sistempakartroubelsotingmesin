@@ -47,10 +47,10 @@ export default function TiketPerbaikanView({
     catatan: ''
   });
 
-  // Identifikasi peran 3 aktor
+  // Identifikasi peran 3 aktor (Operator, Teknisi, Admin)
   const isOperator = currentUser?.role === 'Operator';
   const isTeknisi = currentUser?.role === 'Teknisi';
-  const isSupervisor = currentUser?.role === 'Supervisor';
+  const isAdmin = currentUser?.role === 'Admin' || currentUser?.role === 'Supervisor';
 
   const totalTickets = tickets.length;
   const pendingCount = tickets.filter(t => t.status === 'Menunggu Teknisi').length;
@@ -191,20 +191,20 @@ export default function TiketPerbaikanView({
         </div>
       )}
 
-      {isSupervisor && (
+      {isAdmin && (
         <div className="bg-purple-50/90 border border-purple-200 rounded-xl p-4 flex items-center gap-3 text-xs">
           <div className="w-8 h-8 rounded-lg bg-purple-700 text-white flex items-center justify-center shrink-0 shadow-xs">
             <Eye className="w-4 h-4" />
           </div>
           <div>
             <div className="font-bold text-purple-950 flex items-center gap-2">
-              <span>Peran: Supervisor Maintenance</span>
+              <span>Peran: Administrator Pabrik (Admin)</span>
               <span className="text-[10px] bg-purple-100 text-purple-900 px-2 py-0.5 rounded font-mono font-semibold border border-purple-200">
-                Wewenang: Hanya Dapat Melihat (Read-Only)
+                Wewenang: Kelola Operator & Monitoring Antrean
               </span>
             </div>
             <p className="text-purple-800 text-[11px] mt-0.5">
-              Mode pengawasan produksi aktif. Anda memantau seluruh antrean perbaikan, durasi penanganan teknisi, dan rekapitulasi performa lini tanpa izin memodifikasi data tiket.
+              Mode pengawasan aktif. Anda memiliki akses pengawasan seluruh antrean perbaikan dan wewenang mengelola data operator baru di tab <strong>Kelola Operator</strong>.
             </p>
           </div>
         </div>
@@ -471,8 +471,8 @@ export default function TiketPerbaikanView({
                       </>
                     )}
 
-                    {/* AKTOR 3: SUPERVISOR (HANYA DAPAT MELIHAT) */}
-                    {isSupervisor && (
+                    {/* AKTOR 3: ADMIN (HANYA MELIHAT ANTREAN & AUDIT) */}
+                    {isAdmin && (
                       <>
                         <div className={`p-2 rounded-lg border text-center text-xs ${
                           isPending ? 'bg-rose-50 border-rose-200 text-rose-800' :
@@ -497,7 +497,7 @@ export default function TiketPerbaikanView({
                         </button>
 
                         <span className="text-[9px] text-slate-400 text-center font-mono uppercase tracking-wider">
-                          Mode Pengawasan (Hanya Lihat)
+                          Mode Admin (Monitoring)
                         </span>
                       </>
                     )}

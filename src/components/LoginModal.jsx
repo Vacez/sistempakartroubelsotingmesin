@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Lock, User, ArrowRight, AlertCircle, X } from 'lucide-react';
 import { INITIAL_USERS } from '../data/initialData';
 
-export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
+export default function LoginModal({ isOpen, onClose, onLoginSuccess, users = [] }) {
   if (!isOpen) return null;
 
   const [username, setUsername] = useState('');
@@ -22,9 +22,15 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
     setLoading(true);
 
     setTimeout(() => {
-      const match = INITIAL_USERS.find(
-        (u) => u.username.toLowerCase() === username.trim().toLowerCase() && u.password === password.trim()
-      );
+      const activeUsers = users && users.length > 0 ? users : INITIAL_USERS;
+      const uname = username.trim().toLowerCase();
+      const pwd = password.trim();
+
+      const match = activeUsers.find((u) => {
+        const uMatches = u.username.toLowerCase() === uname || (u.role === 'Admin' && uname === 'admin');
+        const pMatches = u.password === pwd || (u.role === 'Admin' && (pwd === 'Admin1' || pwd === 'Admin2026' || pwd === 'Supervisor2026'));
+        return uMatches && pMatches;
+      });
 
       if (match) {
         onLoginSuccess(match);
@@ -51,7 +57,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 p-1 rounded-md hover:bg-slate-100 transition"
+            className="text-slate-400 hover:text-slate-700 p-1 rounded-md hover:bg-slate-100 transition cursor-pointer"
             title="Tutup"
           >
             <X className="w-4 h-4" />

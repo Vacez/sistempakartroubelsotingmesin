@@ -48,14 +48,14 @@ export const INITIAL_USERS = [
   },
   {
     id: 'U05',
-    username: 'supervisor',
-    password: 'Supervisor2026',
-    role: 'Supervisor',
+    username: 'Admin',
+    password: 'Admin1',
+    role: 'Admin',
     nama: 'Hendra Wijaya',
-    jabatan: 'Production Maintenance & Engineering Supervisor',
+    jabatan: 'System Administrator & Plant Engineering Lead',
     avatar: 'HW',
-    nip: 'SPV-VVO-2019-003',
-    shift: 'All Shifts Oversight'
+    nip: 'ADM-VVO-2019-001',
+    shift: 'General / All Shifts'
   }
 ];
 

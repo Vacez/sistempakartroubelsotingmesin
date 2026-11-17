@@ -562,10 +562,10 @@ export default function DiagnosaView({
                       </div>
                     </div>
 
-                    {currentUser?.role === 'Supervisor' ? (
+                    {(currentUser?.role === 'Admin' || currentUser?.role === 'Supervisor') ? (
                       <div className="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 font-medium text-xs flex items-center gap-1.5 whitespace-nowrap">
                         <Eye className="w-3.5 h-3.5 text-purple-600" />
-                        <span>Mode Supervisor: Read-Only (Hanya Lihat)</span>
+                        <span>Mode Admin: Monitoring (Hanya Lihat)</span>
                       </div>
                     ) : (
                       <button

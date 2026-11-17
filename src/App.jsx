@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import DiagnosaView from './components/DiagnosaView';
 import TiketPerbaikanView from './components/TiketPerbaikanView';
 import CaseStudyView from './components/CaseStudyView';
+import UserManagementView from './components/UserManagementView';
 import CallTechnicianModal from './components/CallTechnicianModal';
 import PrintSpkModal from './components/PrintSpkModal';
 import LoginModal from './components/LoginModal';
@@ -19,13 +20,45 @@ import {
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function App() {
+  // Database Pengguna / Personel Pabrik
+  const [users, setUsers] = useState(() => {
+    const saved = localStorage.getItem('expert_mech_users');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Migrasi Supervisor -> Admin jika ada di cache
+          return parsed.map(u => u.role === 'Supervisor' ? {
+            ...u,
+            role: 'Admin',
+            username: u.username === 'supervisor' ? 'Admin' : u.username,
+            password: u.password === 'Supervisor2026' ? 'Admin1' : u.password,
+            jabatan: 'System Administrator & Plant Engineering Lead',
+            nip: u.nip ? u.nip.replace('SPV-', 'ADM-') : 'ADM-VVO-2019-001'
+          } : u);
+        }
+      } catch (e) {
+        return INITIAL_USERS;
+      }
+    }
+    return INITIAL_USERS;
+  });
+
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('expert_mech_user');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Sanitize legacy avatar URLs or invalid strings
         if (parsed) {
+          // Migrasi Supervisor -> Admin
+          if (parsed.role === 'Supervisor') {
+            parsed.role = 'Admin';
+            parsed.username = 'Admin';
+            parsed.password = 'Admin1';
+            parsed.jabatan = 'System Administrator & Plant Engineering Lead';
+            parsed.nip = 'ADM-VVO-2019-001';
+          }
+          // Sanitize legacy avatar URLs or invalid strings
           if (!parsed.avatar || parsed.avatar.startsWith('http') || parsed.avatar.length > 3) {
             parsed.avatar = (parsed.nama || parsed.username || 'OP')
               .split(' ')
@@ -45,7 +78,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState(() => {
     const saved = localStorage.getItem('expert_mech_tab');
-    if (saved === 'tiket' || saved === 'studi-kasus') return saved;
+    if (saved === 'tiket' || saved === 'studi-kasus' || saved === 'pengguna') return saved;
     return 'diagnosa';
   });
 
@@ -89,6 +122,10 @@ export default function App() {
 
   // Sync to localStorage
   useEffect(() => {
+    localStorage.setItem('expert_mech_users', JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
     if (currentUser) {
       localStorage.setItem('expert_mech_user', JSON.stringify(currentUser));
     }
@@ -123,6 +160,22 @@ export default function App() {
     setTimeout(() => {
       setToastMessage(null);
     }, 3500);
+  };
+
+  // Manajemen User Handlers (Admin)
+  const handleAddUser = (newUser) => {
+    setUsers(prev => [newUser, ...prev]);
+    triggerToast(`Operator baru "${newUser.nama}" (${newUser.username}) berhasil didaftarkan!`);
+  };
+
+  const handleDeleteUser = (userId) => {
+    setUsers(prev => prev.filter(u => u.id !== userId));
+    triggerToast('Data personel berhasil dihapus.');
+  };
+
+  const handleSwitchUser = (targetUser) => {
+    setCurrentUser(targetUser);
+    triggerToast(`Beralih ke akun ${targetUser.nama} (${targetUser.role})`);
   };
 
   const handleSaveDiagnosa = (newRecord) => {
@@ -178,15 +231,15 @@ export default function App() {
 
     setDiagnosaHistory(prev =>
       prev.map(d => {
-        const found = tickets.find(t => t.id === ticketId);
-        if (found && d.idMesin === found.idMesin) {
+        const matchingTicket = tickets.find(t => t.id === ticketId);
+        if (matchingTicket && d.idMesin === matchingTicket.idMesin) {
           return { ...d, statusPanggilan: 'Selesai' };
         }
         return d;
       })
     );
 
-    triggerToast(`Perbaikan tiket ${ticketId} selesai dikonfirmasi. Notifikasi terkirim.`);
+    triggerToast(`Tiket ${ticketId} telah selesai diperbaiki.`);
   };
 
   const handleOpenPrintSpk = (data) => {
@@ -200,7 +253,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50">
+        <div className="fixed bottom-5 right-5 z-50 animate-fadeIn">
           <div className="px-3.5 py-2.5 rounded-lg shadow-lg text-xs font-medium text-white flex items-center gap-2 bg-slate-900 border border-slate-800">
             {toastMessage.type === 'urgent' ? (
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
@@ -219,9 +272,10 @@ export default function App() {
         currentUser={currentUser}
         onLogout={() => setIsLoginModalOpen(true)}
         pendingTicketsCount={pendingTicketsCount}
+        usersCount={users.length}
       />
 
-      {/* Main Content Area (Menu Database & Diagram UML telah dihapus sesuai permintaan) */}
+      {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
         {activeTab === 'diagnosa' && (
           <DiagnosaView
@@ -266,6 +320,17 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'pengguna' && currentUser?.role === 'Admin' && (
+          <UserManagementView
+            users={users}
+            currentUser={currentUser}
+            machines={machines}
+            onAddUser={handleAddUser}
+            onDeleteUser={handleDeleteUser}
+            onSwitchUser={handleSwitchUser}
+          />
+        )}
+
         {activeTab === 'studi-kasus' && (
           <CaseStudyView machines={machines} />
         )}
@@ -305,6 +370,7 @@ export default function App() {
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
+        users={users}
         onLoginSuccess={(user) => {
           setCurrentUser(user);
           triggerToast(`Berhasil masuk sebagai ${user.nama} (${user.role})`);
