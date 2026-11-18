@@ -17,32 +17,20 @@ import {
   INITIAL_DIAGNOSA_HISTORY, 
   INITIAL_TICKETS 
 } from './data/initialData';
+import { api } from './services/api';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function App() {
-  // Database Pengguna / Personel Pabrik
-  const [users, setUsers] = useState(() => {
-    const saved = localStorage.getItem('expert_mech_users');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Migrasi Supervisor -> Admin jika ada di cache
-          return parsed.map(u => u.role === 'Supervisor' ? {
-            ...u,
-            role: 'Admin',
-            username: u.username === 'supervisor' ? 'Admin' : u.username,
-            password: u.password === 'Supervisor2026' ? 'Admin1' : u.password,
-            jabatan: 'System Administrator & Plant Engineering Lead',
-            nip: u.nip ? u.nip.replace('SPV-', 'ADM-') : 'ADM-VVO-2019-001'
-          } : u);
-        }
-      } catch (e) {
-        return INITIAL_USERS;
-      }
-    }
-    return INITIAL_USERS;
-  });
+  const [dbStatus, setDbStatus] = useState('connecting'); // 'connecting' | 'connected' | 'offline'
+
+  // State Data Utama (Diisi otomatis dari MySQL via /api/bootstrap)
+  const [users, setUsers] = useState(INITIAL_USERS);
+  const [machines, setMachines] = useState(INITIAL_MACHINES);
+  const [gejalaList, setGejalaList] = useState(INITIAL_GEJALA);
+  const [kerusakanList, setKerusakanList] = useState(INITIAL_KERUSAKAN);
+  const [rules, setRules] = useState(INITIAL_RULES);
+  const [diagnosaHistory, setDiagnosaHistory] = useState(INITIAL_DIAGNOSA_HISTORY);
+  const [tickets, setTickets] = useState(INITIAL_TICKETS);
 
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('expert_mech_user');
@@ -50,7 +38,6 @@ export default function App() {
       try {
         const parsed = JSON.parse(saved);
         if (parsed) {
-          // Migrasi Supervisor -> Admin
           if (parsed.role === 'Supervisor') {
             parsed.role = 'Admin';
             parsed.username = 'Admin';
@@ -58,7 +45,6 @@ export default function App() {
             parsed.jabatan = 'System Administrator & Plant Engineering Lead';
             parsed.nip = 'ADM-VVO-2019-001';
           }
-          // Sanitize legacy avatar URLs or invalid strings
           if (!parsed.avatar || parsed.avatar.startsWith('http') || parsed.avatar.length > 3) {
             parsed.avatar = (parsed.nama || parsed.username || 'OP')
               .split(' ')
@@ -69,7 +55,7 @@ export default function App() {
           }
           return parsed;
         }
-      } catch (e) {
+      } catch {
         return INITIAL_USERS[0];
       }
     }
@@ -82,36 +68,6 @@ export default function App() {
     return 'diagnosa';
   });
 
-  const [machines, setMachines] = useState(() => {
-    const saved = localStorage.getItem('expert_mech_machines');
-    return saved ? JSON.parse(saved) : INITIAL_MACHINES;
-  });
-
-  const [gejalaList, setGejalaList] = useState(() => {
-    const saved = localStorage.getItem('expert_mech_gejala');
-    return saved ? JSON.parse(saved) : INITIAL_GEJALA;
-  });
-
-  const [kerusakanList, setKerusakanList] = useState(() => {
-    const saved = localStorage.getItem('expert_mech_kerusakan');
-    return saved ? JSON.parse(saved) : INITIAL_KERUSAKAN;
-  });
-
-  const [rules, setRules] = useState(() => {
-    const saved = localStorage.getItem('expert_mech_rules');
-    return saved ? JSON.parse(saved) : INITIAL_RULES;
-  });
-
-  const [diagnosaHistory, setDiagnosaHistory] = useState(() => {
-    const saved = localStorage.getItem('expert_mech_diagnosa');
-    return saved ? JSON.parse(saved) : INITIAL_DIAGNOSA_HISTORY;
-  });
-
-  const [tickets, setTickets] = useState(() => {
-    const saved = localStorage.getItem('expert_mech_tickets');
-    return saved ? JSON.parse(saved) : INITIAL_TICKETS;
-  });
-
   // Modal States
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [callTechModalData, setCallTechModalData] = useState(null);
@@ -120,11 +76,40 @@ export default function App() {
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
-  // Sync to localStorage
-  useEffect(() => {
-    localStorage.setItem('expert_mech_users', JSON.stringify(users));
-  }, [users]);
+  const triggerToast = (msg, type = 'success') => {
+    setToastMessage({ msg, type });
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3500);
+  };
 
+  // Muat seluruh data dari Database MySQL saat aplikasi pertama kali dibuka
+  useEffect(() => {
+    let isMounted = true;
+    async function loadFromMysql() {
+      try {
+        const data = await api.getBootstrap();
+        if (!isMounted) return;
+        if (data.users?.length) setUsers(data.users);
+        if (data.machines?.length) setMachines(data.machines);
+        if (data.gejala?.length) setGejalaList(data.gejala);
+        if (data.kerusakan?.length) setKerusakanList(data.kerusakan);
+        if (data.rules?.length) setRules(data.rules);
+        if (Array.isArray(data.diagnosaHistory)) setDiagnosaHistory(data.diagnosaHistory);
+        if (Array.isArray(data.tickets)) setTickets(data.tickets);
+        setDbStatus('connected');
+      } catch (err) {
+        console.warn('[MySQL Bootstrap] Gagal memuat dari API MySQL, menggunakan fallback lokal:', err.message);
+        if (isMounted) setDbStatus('offline');
+      }
+    }
+    loadFromMysql();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Simpan sesi user & tab aktif di browser
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem('expert_mech_user', JSON.stringify(currentUser));
@@ -135,51 +120,54 @@ export default function App() {
     localStorage.setItem('expert_mech_tab', activeTab);
   }, [activeTab]);
 
-  useEffect(() => {
-    localStorage.setItem('expert_mech_tickets', JSON.stringify(tickets));
-  }, [tickets]);
-
-  useEffect(() => {
-    localStorage.setItem('expert_mech_diagnosa', JSON.stringify(diagnosaHistory));
-  }, [diagnosaHistory]);
-
-  useEffect(() => {
-    localStorage.setItem('expert_mech_rules', JSON.stringify(rules));
-  }, [rules]);
-
-  useEffect(() => {
-    localStorage.setItem('expert_mech_gejala', JSON.stringify(gejalaList));
-  }, [gejalaList]);
-
-  useEffect(() => {
-    localStorage.setItem('expert_mech_kerusakan', JSON.stringify(kerusakanList));
-  }, [kerusakanList]);
-
-  const triggerToast = (msg, type = 'success') => {
-    setToastMessage({ msg, type });
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3500);
+  // ==========================================================================
+  // CRUD HANDLERS TERINTEGRASI MYSQL
+  // ==========================================================================
+  const handleAddUser = async (newUser) => {
+    try {
+      const savedUser = await api.createUser(newUser);
+      setUsers(prev => [savedUser, ...prev]);
+      triggerToast(`Operator baru "${savedUser.nama}" tersimpan di MySQL & siap login!`);
+    } catch (err) {
+      if (dbStatus === 'connected') {
+        triggerToast(`Gagal menyimpan ke MySQL: ${err.message}`, 'urgent');
+        return;
+      }
+      setUsers(prev => [newUser, ...prev]);
+      triggerToast(`Operator baru "${newUser.nama}" ditambahkan (Mode Offline).`);
+    }
   };
 
-  // Manajemen User Handlers (Admin)
-  const handleAddUser = (newUser) => {
-    setUsers(prev => [newUser, ...prev]);
-    triggerToast(`Operator baru "${newUser.nama}" (${newUser.username}) berhasil didaftarkan!`);
-  };
-
-  const handleDeleteUser = (userId) => {
-    setUsers(prev => prev.filter(u => u.id !== userId));
-    triggerToast('Data personel berhasil dihapus.');
+  const handleDeleteUser = async (userId) => {
+    try {
+      await api.deleteUser(userId);
+      setUsers(prev => prev.filter(u => u.id !== userId));
+      triggerToast('Data personel berhasil dihapus dari MySQL.');
+    } catch (err) {
+      if (dbStatus === 'connected') {
+        triggerToast(`Gagal menghapus dari MySQL: ${err.message}`, 'urgent');
+        return;
+      }
+      setUsers(prev => prev.filter(u => u.id !== userId));
+      triggerToast('Data personel dihapus (Mode Offline).');
+    }
   };
 
   const handleSwitchUser = (targetUser) => {
     setCurrentUser(targetUser);
+    if (targetUser.role !== 'Admin' && activeTab === 'pengguna') {
+      setActiveTab('diagnosa');
+    }
     triggerToast(`Beralih ke akun ${targetUser.nama} (${targetUser.role})`);
   };
 
-  const handleSaveDiagnosa = (newRecord) => {
-    setDiagnosaHistory(prev => [newRecord, ...prev]);
+  const handleSaveDiagnosa = async (newRecord) => {
+    try {
+      const saved = await api.createDiagnosa(newRecord);
+      setDiagnosaHistory(prev => [saved, ...prev]);
+    } catch {
+      setDiagnosaHistory(prev => [newRecord, ...prev]);
+    }
   };
 
   const handleOpenCallTechnician = (data) => {
@@ -187,59 +175,62 @@ export default function App() {
     setIsCallTechModalOpen(true);
   };
 
-  const handleSubmitTicket = (newTicket) => {
-    setTickets(prev => [newTicket, ...prev]);
-    setDiagnosaHistory(prev => 
-      prev.map(d => d.idMesin === newTicket.idMesin ? { ...d, statusPanggilan: 'Menunggu Teknisi' } : d)
-    );
-    triggerToast(`Tiket ${newTicket.id} berhasil dikirim ke antrean teknisi maintenance.`, 'urgent');
+  const handleSubmitTicket = async (newTicket) => {
+    try {
+      const savedTicket = await api.createTicket(newTicket);
+      setTickets(prev => [savedTicket, ...prev]);
+      setDiagnosaHistory(prev => 
+        prev.map(d => d.idMesin === savedTicket.idMesin ? { ...d, statusPanggilan: 'Menunggu Teknisi' } : d)
+      );
+      triggerToast(`Tiket ${savedTicket.id} tersimpan ke MySQL & masuk antrean teknisi.`, 'urgent');
+    } catch {
+      setTickets(prev => [newTicket, ...prev]);
+      triggerToast(`Tiket ${newTicket.id} masuk antrean (Mode Offline).`, 'urgent');
+    }
   };
 
-  const handleUpdateTicketStatus = (ticketId, newStatus, technicianName) => {
-    setTickets(prev =>
-      prev.map(t => {
-        if (t.id === ticketId) {
-          return {
-            ...t,
-            status: newStatus,
-            teknisiPenanggung: technicianName,
-            waktuMulai: new Date().toLocaleString('id-ID')
-          };
-        }
-        return t;
-      })
-    );
-    triggerToast(`Tiket ${ticketId} status diubah ke: ${newStatus}`);
+  const handleUpdateTicketStatus = async (ticketId, newStatus, technicianName) => {
+    try {
+      const updated = await api.takeTicket(ticketId, newStatus, technicianName);
+      setTickets(prev => prev.map(t => (t.id === ticketId ? updated : t)));
+      triggerToast(`Tiket ${ticketId} diperbarui di MySQL: ${updated.status}`);
+    } catch {
+      setTickets(prev =>
+        prev.map(t =>
+          t.id === ticketId
+            ? { ...t, status: newStatus, teknisiPenanggung: technicianName, waktuMulai: new Date().toLocaleString('id-ID') }
+            : t
+        )
+      );
+      triggerToast(`Tiket ${ticketId} status diubah ke: ${newStatus}`);
+    }
   };
 
-  const handleFinishRepair = (ticketId, repairDetails) => {
-    setTickets(prev =>
-      prev.map(t => {
-        if (t.id === ticketId) {
-          return {
-            ...t,
-            status: 'Selesai',
-            tindakanTeknisi: repairDetails.tindakanTeknisi,
-            rekomendasiTeknisi: repairDetails.rekomendasiTeknisi,
-            waktuSelesai: repairDetails.waktuSelesai,
-            teknisiPenanggung: repairDetails.teknisiPenanggung
-          };
-        }
-        return t;
-      })
-    );
-
-    setDiagnosaHistory(prev =>
-      prev.map(d => {
-        const matchingTicket = tickets.find(t => t.id === ticketId);
-        if (matchingTicket && d.idMesin === matchingTicket.idMesin) {
-          return { ...d, statusPanggilan: 'Selesai' };
-        }
-        return d;
-      })
-    );
-
-    triggerToast(`Tiket ${ticketId} telah selesai diperbaiki.`);
+  const handleFinishRepair = async (ticketId, repairDetails) => {
+    try {
+      const finished = await api.finishTicket(ticketId, repairDetails);
+      setTickets(prev => prev.map(t => (t.id === ticketId ? finished : t)));
+      setDiagnosaHistory(prev =>
+        prev.map(d => (d.idMesin === finished.idMesin ? { ...d, statusPanggilan: 'Selesai' } : d))
+      );
+      triggerToast(`Tiket ${ticketId} selesai & tersimpan di MySQL.`);
+    } catch {
+      setTickets(prev =>
+        prev.map(t =>
+          t.id === ticketId
+            ? {
+                ...t,
+                status: 'Selesai',
+                tindakanTeknisi: repairDetails.tindakanTeknisi,
+                rekomendasiTeknisi: repairDetails.rekomendasiTeknisi,
+                waktuSelesai: repairDetails.waktuSelesai,
+                teknisiPenanggung: repairDetails.teknisiPenanggung
+              }
+            : t
+        )
+      );
+      triggerToast(`Tiket ${ticketId} telah selesai diperbaiki.`);
+    }
   };
 
   const handleOpenPrintSpk = (data) => {
@@ -273,6 +264,7 @@ export default function App() {
         onLogout={() => setIsLoginModalOpen(true)}
         pendingTicketsCount={pendingTicketsCount}
         usersCount={users.length}
+        dbStatus={dbStatus}
       />
 
       {/* Main Content Area */}
@@ -344,10 +336,10 @@ export default function App() {
             <span>•</span>
             <span>Sistem Pakar Troubleshooting Mesin Produksi</span>
             <span>•</span>
-            <span className="font-mono text-[11px]">Forward Chaining</span>
+            <span className="font-mono text-[11px]">React + Express + MySQL</span>
           </div>
           <div className="font-mono text-[11px] text-slate-400">
-            Manufacturing Line Diagnostic Unit
+            DB: db_sistem_pakar_mesin ({dbStatus === 'connected' ? 'MySQL Active' : dbStatus})
           </div>
         </div>
       </footer>
@@ -373,6 +365,9 @@ export default function App() {
         users={users}
         onLoginSuccess={(user) => {
           setCurrentUser(user);
+          if (user.role !== 'Admin' && activeTab === 'pengguna') {
+            setActiveTab('diagnosa');
+          }
           triggerToast(`Berhasil masuk sebagai ${user.nama} (${user.role})`);
         }}
       />

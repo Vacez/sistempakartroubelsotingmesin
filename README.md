@@ -1,7 +1,7 @@
 # Sistem Pakar Troubleshooting Mesin Produksi Berbasis Web
-**Metode: Forward Chaining | Studi Kasus: PT Vivo Mobile Indonesia**
+**Metode: Forward Chaining | Arsitektur: React.js + Express.js + MySQL | Studi Kasus: PT Vivo Mobile Indonesia**
 
-Aplikasi sistem pakar berbasis React.js dan Tailwind CSS yang dirancang untuk membantu operator dan teknisi dalam melakukan identifikasi awal (troubleshooting) terhadap gangguan atau kerusakan mesin pabrik secara cepat, terstruktur, dan akurat menggunakan penalaran **Forward Chaining (IF–THEN)**.
+Aplikasi sistem pakar Full-Stack berbasis **React.js**, **Node.js (Express.js)**, dan **Database MySQL (3NF)** yang dirancang untuk membantu operator, teknisi, dan admin dalam melakukan identifikasi awal (troubleshooting) serta manajemen antrean perbaikan mesin pabrik secara cepat, terstruktur, dan akurat menggunakan penalaran **Forward Chaining (IF–THEN)**.
 
 Aplikasi ini dibangun secara komprehensif berdasarkan **dua dokumen panduan**:
 1. **Dokumen 1**: Struktur Normalisasi Database (UNF, 1NF, 2NF, 3NF), Relasi Antar Tabel, Use Case Diagram, ERD, Flowchart Sistem Lama vs Usulan, Activity Diagram (Login, Diagnosa, Panggil Teknisi, Perbaikan), dan Sequence Diagram.
@@ -9,22 +9,30 @@ Aplikasi ini dibangun secara komprehensif berdasarkan **dua dokumen panduan**:
 
 ---
 
-## 🚀 Lokasi Instalasi
-Aplikasi ini telah disimpan dan di-build secara lengkap di:
-```text
-D:\sistem-pakar-troubleshooting-mesin\
-```
+## 🏗️ Arsitektur Teknologi (Tech Stack)
+- **Bahasa Pemrograman**: JavaScript (ES6+ / JSX), SQL, HTML5, CSS3
+- **Frontend**: React.js (v19), Tailwind CSS (v3.4), Lucide Icons, Vite (v8)
+- **Backend REST API**: Node.js + Express.js (`server/index.js`, Port `5000`)
+- **Database Server**: MySQL / MariaDB (`db_sistem_pakar_mesin`, Port `3306`, driver `mysql2`)
+- **File Schema SQL**: `database/db_sistem_pakar_mesin.sql` (7 tabel 3NF siap import di phpMyAdmin)
 
 ---
 
-## 🛠️ Cara Menjalankan Website
+## 🛠️ Cara Menjalankan Website (Full-Stack + MySQL)
 
-### Cara Cepat (Windows):
+### Cara Cepat (Windows - Otomatis Jalankan MySQL + Backend + Frontend):
 1. Buka folder `D:\sistem-pakar-troubleshooting-mesin\`
 2. Klik ganda file **`jalankan_aplikasi.bat`**
 3. Buka browser di alamat: [http://localhost:5173](http://localhost:5173)
 
 ### Cara Manual via Terminal / PowerShell:
+1. Pastikan MySQL (XAMPP) aktif dan database `db_sistem_pakar_mesin` sudah di-import dari `database/db_sistem_pakar_mesin.sql`.
+2. Jalankan Backend API:
+```powershell
+cd D:\sistem-pakar-troubleshooting-mesin
+npm run server
+```
+3. Di terminal baru, jalankan Frontend React:
 ```powershell
 cd D:\sistem-pakar-troubleshooting-mesin
 npm run dev

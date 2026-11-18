@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, User, ArrowRight, AlertCircle, X } from 'lucide-react';
 import { INITIAL_USERS } from '../data/initialData';
+import { api } from '../services/api';
 
 export default function LoginModal({ isOpen, onClose, onLoginSuccess, users = [] }) {
   if (!isOpen) return null;
@@ -10,7 +11,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, users = []
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -21,25 +22,41 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, users = []
 
     setLoading(true);
 
-    setTimeout(() => {
-      const activeUsers = users && users.length > 0 ? users : INITIAL_USERS;
-      const uname = username.trim().toLowerCase();
-      const pwd = password.trim();
-
-      const match = activeUsers.find((u) => {
-        const uMatches = u.username.toLowerCase() === uname || (u.role === 'Admin' && uname === 'admin');
-        const pMatches = u.password === pwd || (u.role === 'Admin' && (pwd === 'Admin1' || pwd === 'Admin2026' || pwd === 'Supervisor2026'));
-        return uMatches && pMatches;
-      });
-
-      if (match) {
-        onLoginSuccess(match);
+    try {
+      // Autentikasi langsung ke MySQL melalui REST API
+      const result = await api.login(username.trim(), password.trim());
+      if (result?.user) {
+        onLoginSuccess(result.user);
         onClose();
-      } else {
-        setError('Kredensial tidak valid. Periksa kembali username dan kata sandi.');
+        return;
       }
+      setError('Kredensial tidak valid. Periksa kembali username dan kata sandi.');
+    } catch (err) {
+      // Jika error 401 dari server (password salah), langsung tampilkan
+      if (err.message && err.message.toLowerCase().includes('kredensial')) {
+        setError(err.message);
+      } else {
+        // Fallback hanya jika server backend belum dijalankan
+        const activeUsers = users && users.length > 0 ? users : INITIAL_USERS;
+        const uname = username.trim().toLowerCase();
+        const pwd = password.trim();
+
+        const match = activeUsers.find((u) => {
+          const uMatches = u.username.toLowerCase() === uname || (u.role === 'Admin' && uname === 'admin');
+          const pMatches = u.password === pwd || (u.role === 'Admin' && (pwd === 'Admin1' || pwd === 'Supervisor2026'));
+          return uMatches && pMatches;
+        });
+
+        if (match) {
+          onLoginSuccess(match);
+          onClose();
+        } else {
+          setError('Kredensial tidak valid. Periksa kembali username dan kata sandi.');
+        }
+      }
+    } finally {
       setLoading(false);
-    }, 200);
+    }
   };
 
   return (
@@ -114,7 +131,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, users = []
               disabled={loading}
               className="w-full mt-2 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-sm transition active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
             >
-              <span>{loading ? 'Memverifikasi...' : 'Masuk ke Sistem'}</span>
+              <span>{loading ? 'Memverifikasi ke MySQL...' : 'Masuk ke Sistem'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </form>

@@ -14,7 +14,8 @@ export default function Navbar({
   currentUser, 
   onLogout, 
   pendingTicketsCount = 0,
-  usersCount = 0
+  usersCount = 0,
+  dbStatus = 'connecting'
 }) {
   // Menu operasional: jika Admin, tampilkan menu "Kelola Operator"
   const navTabs = [
@@ -63,8 +64,16 @@ export default function Navbar({
 
           <div className="flex items-center gap-3 text-slate-400">
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span className="text-slate-300 font-medium">Sistem Online</span>
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                dbStatus === 'connected' ? 'bg-emerald-400' :
+                dbStatus === 'connecting' ? 'bg-amber-400 animate-pulse' :
+                'bg-rose-400'
+              }`}></span>
+              <span className="text-slate-300 font-medium">
+                {dbStatus === 'connected' ? 'MySQL Terhubung' :
+                 dbStatus === 'connecting' ? 'Menghubungkan MySQL...' :
+                 'Mode Offline'}
+              </span>
             </span>
             <span className="text-slate-600">|</span>
             <span className="font-mono text-slate-300 text-[11px]">
