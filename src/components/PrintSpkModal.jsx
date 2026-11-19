@@ -1,11 +1,25 @@
-import React from 'react';
-import { Printer, X, CheckCircle2 } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Printer, X, ArrowLeft } from 'lucide-react';
 
 export default function PrintSpkModal({ 
   isOpen, 
   onClose, 
   data 
 }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen || !data) return null;
 
   const { machine, diagnosis, selectedGejala, currentUser } = data;
@@ -15,25 +29,50 @@ export default function PrintSpkModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 animate-fadeIn my-6">
+    <div 
+      className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div 
+        className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 animate-fadeIn my-6 relative"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Top Control Bar */}
-        <div className="print-hide flex items-center justify-between pb-3 border-b border-slate-200 mb-5">
-          <div className="text-xs text-slate-500 font-medium">
-            Pratinjau Lembar Kerja Perintah Perbaikan (SPK)
+        <div className="print-hide flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 mb-5">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium text-xs flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+              title="Kembali ke daftar antrean (Esc)"
+            >
+              <ArrowLeft className="w-4 h-4 text-slate-600" />
+              <span>Kembali</span>
+            </button>
+            <div className="text-xs text-slate-500 font-medium hidden sm:block">
+              Pratinjau Lembar Kerja SPK
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={handlePrint}
-              className="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs shadow-sm flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs shadow-sm flex items-center gap-1.5 transition cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" /> Cetak Dokumen
             </button>
             <button
+              type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-500 text-xs font-bold"
+              className="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-700 text-slate-600 text-xs font-medium flex items-center gap-1 transition cursor-pointer"
+              title="Tutup lembar SPK (Esc)"
             >
               <X className="w-4 h-4" />
+              <span>Tutup</span>
             </button>
           </div>
         </div>
@@ -133,6 +172,31 @@ export default function PrintSpkModal({
               <div className="font-bold underline">Rian Kurniawan</div>
               <div className="text-[10px] text-slate-400 font-mono">ENG-VVO-2021-019</div>
             </div>
+          </div>
+        </div>
+
+        {/* Bottom Action Footer */}
+        <div className="print-hide flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200 mt-6 bg-slate-50 -mx-6 -mb-6 p-4 rounded-b-xl">
+          <div className="text-[11px] text-slate-500">
+            Tekan <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded font-mono text-[10px] text-slate-700 shadow-xs">ESC</kbd> atau klik area luar untuk menutup
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-slate-300 hover:bg-slate-200 bg-white text-slate-700 font-medium text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
+            >
+              <ArrowLeft className="w-4 h-4 text-slate-600" />
+              <span>Kembali / Tutup</span>
+            </button>
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs shadow-sm flex items-center justify-center gap-1.5 transition cursor-pointer"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Cetak Dokumen SPK</span>
+            </button>
           </div>
         </div>
       </div>
