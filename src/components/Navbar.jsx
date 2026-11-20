@@ -41,7 +41,9 @@ export default function Navbar({
   ];
 
   // Inisial aman (mencegah teks URL bocor ke UI)
-  const userInitials = typeof currentUser?.avatar === 'string' && currentUser.avatar.length <= 3 && !currentUser.avatar.startsWith('http')
+  const userInitials = !currentUser 
+    ? '?'
+    : typeof currentUser?.avatar === 'string' && currentUser.avatar.length <= 3 && !currentUser.avatar.startsWith('http')
     ? currentUser.avatar
     : (currentUser?.nama || currentUser?.username || 'OP')
         .split(' ')
@@ -82,17 +84,19 @@ export default function Navbar({
             <span className="font-mono text-slate-300 text-[11px]">
               Wewenang:{' '}
               <strong className={
+                !currentUser ? 'text-slate-400' :
                 currentUser?.role === 'Teknisi' ? 'text-amber-400' :
                 currentUser?.role === 'Admin' ? 'text-purple-300' :
                 'text-blue-400'
               }>
-                {currentUser?.role === 'Operator' ? 'Membuat Antrean' :
+                {!currentUser ? 'Belum Login' :
+                 currentUser?.role === 'Operator' ? 'Membuat Antrean' :
                  currentUser?.role === 'Teknisi' ? 'Memproses Antrean' :
                  'Kelola Operator & Monitoring'}
               </strong>
             </span>
             <span className="text-slate-600">|</span>
-            <span>Shift: <strong className="text-slate-200">{currentUser?.shift || 'Shift 1'}</strong></span>
+            <span>Shift: <strong className="text-slate-200">{currentUser?.shift || '-'}</strong></span>
           </div>
         </div>
       </div>
@@ -127,19 +131,21 @@ export default function Navbar({
               </div>
               <div className="text-left hidden sm:block">
                 <div className="font-semibold text-slate-900 leading-none flex items-center gap-1.5">
-                  <span>{currentUser?.nama}</span>
+                  <span>{currentUser?.nama || 'Silakan Login'}</span>
                   <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${
+                    !currentUser ? 'bg-slate-100 text-slate-600 border-slate-200' :
                     currentUser?.role === 'Teknisi' ? 'bg-amber-50 text-amber-800 border-amber-200' :
                     currentUser?.role === 'Admin' ? 'bg-purple-50 text-purple-800 border-purple-200' :
                     'bg-blue-50 text-blue-800 border-blue-200'
                   }`}>
-                    {currentUser?.role === 'Operator' ? 'Operator • Buat Antrean' :
+                    {!currentUser ? 'Belum Masuk' :
+                     currentUser?.role === 'Operator' ? 'Operator • Buat Antrean' :
                      currentUser?.role === 'Teknisi' ? 'Teknisi • Proses Antrean' :
                      'Admin • Kelola Operator'}
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                  {currentUser?.nip || currentUser?.jabatan}
+                  {currentUser?.nip || currentUser?.jabatan || 'Sesi Belum Aktif'}
                 </div>
               </div>
             </div>
@@ -158,11 +164,15 @@ export default function Navbar({
 
             <button
               onClick={onLogout}
-              className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5 font-medium cursor-pointer"
-              title="Ganti Akun / Logout"
+              className={`text-xs px-2.5 py-1.5 rounded-lg border transition flex items-center gap-1.5 font-medium cursor-pointer shadow-xs ${
+                currentUser
+                  ? 'border-rose-200 hover:border-rose-300 bg-rose-50/70 hover:bg-rose-100 text-rose-700'
+                  : 'border-blue-200 hover:border-blue-300 bg-blue-50/70 hover:bg-blue-100 text-blue-700'
+              }`}
+              title={currentUser ? "Keluar dari Sistem (Logout)" : "Masuk ke Sistem (Login)"}
             >
-              <LogOut className="w-3.5 h-3.5 text-slate-500" />
-              <span className="hidden md:inline">Ganti Akun</span>
+              <LogOut className={`w-3.5 h-3.5 ${currentUser ? 'text-rose-600' : 'text-blue-600'}`} />
+              <span className="hidden md:inline">{currentUser ? 'Logout' : 'Login'}</span>
             </button>
           </div>
         </div>

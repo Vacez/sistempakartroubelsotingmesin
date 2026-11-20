@@ -9,7 +9,8 @@ const app = express();
 const PORT = Number(process.env.API_PORT || 5000);
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
 // ============================================================================
 // ROW MAPPERS (MySQL snake_case -> Frontend camelCase)
@@ -467,8 +468,15 @@ BASIS DATA PENGETAHUAN LENGKAP (20 GEJALA & 10 KERUSAKAN PT VIVO):
 - K10 Kamera Barcode Reader Kotor / Silinder Press Dingin Macet (Parah - Vision & Aktuator Mesin Coldpress): Gejala G18 (Kamera gagal baca QR barcode baterai), G19 (Silinder press dingin tidak mau turun), G20 (Alarm berulang setiap ~4 jam).
   * Solusi: Bersihkan lensa kamera vision Cognex/Keyence, setel pencahayaan LED, lumasi rod silinder press pneumatik, reset log error PLC.
 
-13 FITUR / USE CASE SISTEM WEB (SUBBAB 4.4.2):
-UC-01 Login | UC-02 Profil Mesin & Panduan Indikator | UC-03 Pilih Gejala | UC-04 Proses Forward Chaining | UC-05 Hasil Diagnosa & Solusi | UC-06 Terbitkan Tiket Panggilan Teknisi | UC-07 Pantau Status Tiket | UC-08 Klaim & Tangani Tiket | UC-09 Input Hasil Perbaikan & Spare Part | UC-10 Simulasi Kalibrasi Diagnosa | UC-11 Kelola Direktori Personel (Admin) | UC-12 Cetak SPK Resmi | UC-13 Logout.
+FITUR SISTEM WEB MAINTENANCE:
+Sistem ini dilengkapi fitur Login, Profil Mesin & Panduan Indikator, Diagnosa Kerusakan Forward Chaining, Hasil Solusi, Penerbitan Tiket Panggilan Teknisi, Pemantauan Status Antrean (Menunggu Teknisi, Sedang Ditangani, Selesai), Input Tindakan Teknisi & Penggantian Spare Part, Simulasi Kalibrasi Diagnosa, Manajemen Personel Pabrik, Cetak SPK Resmi, dan Logout.
+
+KEMAMPUAN ANALISA FOTO & BERKAS:
+Pengguna (Operator atau Teknisi) dapat melampirkan foto komponen mesin, foto panel alarm, lampu indikator, foto kebocoran, nozzle lem, baut macet, atau berkas laporan teknis.
+Jika pengguna melampirkan foto atau berkas:
+1. Analisa dengan cermat apa yang terlihat pada gambar/berkas (kondisi fisik mesin, kabel, selang, nozzle, display tekanan, lampu peringatan).
+2. Tentukan kemungkinan kerusakan dan tingkat keparahannya (Ringan/Sedang/Parah).
+3. Berikan instruksi langsung: apakah operator dapat menangani mandiri atau teknisi harus segera diterjunkan ke lini perakitan.
 
 BATASAN STRICT GUARDRAIL:
 Jika pengguna menanyakan hal yang SAMA SEKALI DI LUAR konteks pabrik, mesin, troubleshooting, atau sistem ini (seperti resep masakan, film/artis, politik, game lain, cerita/lelucon umum, coding umum di luar sistem):
@@ -477,9 +485,9 @@ Jawab dengan ramah dan sopan:
 
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message, history = [] } = req.body;
-    if (!message || typeof message !== 'string' || !message.trim()) {
-      return res.status(400).json({ error: 'Pesan tidak boleh kosong.' });
+    const { message, history = [], file = null } = req.body;
+    if ((!message || typeof message !== 'string' || !message.trim()) && !file) {
+      return res.status(400).json({ error: 'Pesan atau lampiran berkas tidak boleh kosong.' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
@@ -504,10 +512,28 @@ app.post('/api/chat', async (req, res) => {
         }
       }
     }
-    // Tambahkan input pengguna terkini
+
+    // Bangun bagian pesan pengguna terkini (teks + lampiran gambar/file)
+    const userParts = [];
+    const promptText = (message || '').trim() || (file ? `Mohon periksa dan analisa lampiran ${file.name || 'berkas'} ini terkait kendala mesin di lini produksi PT Vivo.` : '');
+    if (promptText) {
+      userParts.push({ text: promptText });
+    }
+
+    if (file && file.base64) {
+      const cleanBase64 = String(file.base64).replace(/^data:[^;]+;base64,/, '');
+      const mimeType = file.type || (file.isImage ? 'image/jpeg' : 'application/pdf');
+      userParts.push({
+        inlineData: {
+          mimeType,
+          data: cleanBase64
+        }
+      });
+    }
+
     formattedContents.push({
       role: 'user',
-      parts: [{ text: message.trim() }]
+      parts: userParts
     });
 
     const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'];
@@ -556,7 +582,7 @@ app.post('/api/chat', async (req, res) => {
       return res.status(502).json({
         error: 'Asisten AI sedang mengalami kendala jaringan atau antrean tinggi.',
         detail: lastError,
-        fallbackReply: 'Maaf, layanan AI sedang sibuk. Silakan coba beberapa saat lagi atau tanyakan langsung seputar 13 Use Case dan 5 Mesin Produksi PT Vivo.'
+        fallbackReply: 'Maaf, asisten AI sedang sibuk. Silakan coba beberapa saat lagi atau ceritakan langsung kendala mesin di lini produksi PT Vivo.'
       });
     }
 

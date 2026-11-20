@@ -3,7 +3,7 @@ import { Lock, User, ArrowRight, AlertCircle, X } from 'lucide-react';
 import { INITIAL_USERS } from '../data/initialData';
 import { api } from '../services/api';
 
-export default function LoginModal({ isOpen, onClose, onLoginSuccess, users = [] }) {
+export default function LoginModal({ isOpen, onClose, onLoginSuccess, users = [], canClose = true }) {
   if (!isOpen) return null;
 
   const [username, setUsername] = useState('');
@@ -72,13 +72,15 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, users = []
               Portal Otentikasi Maintenance
             </h2>
           </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 p-1 rounded-md hover:bg-slate-100 transition cursor-pointer"
-            title="Tutup"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          {canClose && (
+            <button
+              onClick={onClose}
+              className="text-slate-400 hover:text-slate-700 p-1 rounded-md hover:bg-slate-100 transition cursor-pointer"
+              title="Tutup"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {/* Form Body */}

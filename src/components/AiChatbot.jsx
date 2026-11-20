@@ -5,14 +5,13 @@ import {
   X, 
   Sparkles, 
   RotateCcw, 
-  ChevronDown, 
-  HelpCircle, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Cpu, 
-  ArrowRight,
+  Paperclip,
+  Image as ImageIcon,
+  FileText,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Eye,
+  AlertCircle
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -39,17 +38,21 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
       {
         id: 'welcome',
         role: 'assistant',
-        text: `Halo **${currentUser?.nama || 'Rekan Pabrik'}** (${roleTitle})! 👋\n\nSaya **Asisten AI Troubleshooting Mesin PT Vivo Mobile Indonesia**.\n\nAda kendala operasional atau alarm indikator pada mesin di lini produksi? Ceritakan masalah yang terjadi, misalnya:\n- Baut macet atau torsi NG pada Mesin ASM\n- Lampu kuning menyala / conveyor macet pada Mesin AGM\n- Tekanan melebihi batas 418 bar pada Mesin Press 3 in 1\n- Lem tidak keluar atau nozzle meluber pada Mesin AGM\n- Kebocoran selang pneumatik / uji AirTightness selalu NG\n- Kamera pemindai barcode baterai gagal baca di Coldpress\n\nSaya siap membantu mendampingi Anda:\n- 🔍 **Analisa Kerusakan**: Deteksi penyebab fisik & tingkat keparahan (Ringan/Sedang/Parah).\n- 🛠️ **Solusi Lapangan**: Langkah mandiri Operator (SOP Stop-Reset-Run) atau tindakan perbaikan Teknisi.\n- 🎫 **Alur Sistem Web**: Panduan penerbitan tiket antrean perbaikan dan pencetakan dokumen SPK resmi.`,
+        text: `Halo **${currentUser?.nama || 'Rekan Pabrik'}** (${roleTitle})! 👋\n\nSaya **Asisten AI Troubleshooting Mesin PT Vivo Mobile Indonesia**.\n\nAda kendala operasional atau alarm indikator pada mesin di lini produksi? Ceritakan masalah yang terjadi, atau **unggah foto mesin / berkas kendala**, misalnya:\n- Baut macet atau torsi NG pada Mesin ASM\n- Lampu kuning menyala / conveyor macet pada Mesin AGM\n- Tekanan melebihi batas 418 bar pada Mesin Press 3 in 1\n- Lem tidak keluar atau nozzle meluber pada Mesin AGM\n- Kebocoran selang pneumatik / uji AirTightness selalu NG\n- Kamera pemindai barcode baterai gagal baca di Coldpress\n\nSaya siap membantu mendampingi Anda:\n- 🔍 **Analisa Kerusakan**: Deteksi penyebab fisik & tingkat keparahan (Ringan/Sedang/Parah).\n- 🛠️ **Solusi Lapangan**: Langkah mandiri Operator (SOP Stop-Reset-Run) atau tindakan perbaikan Teknisi.\n- 🎫 **Alur Sistem Web**: Panduan penerbitan tiket antrean perbaikan dan pencetakan dokumen SPK resmi.`,
         timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
       }
     ];
   });
 
   const [input, setInput] = useState('');
+  const [attachment, setAttachment] = useState(null); // { name, type, size, dataUrl, base64, isImage }
+  const [previewImage, setPreviewImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -60,21 +63,57 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
       scrollToBottom();
       setTimeout(() => inputRef.current?.focus(), 150);
     }
-  }, [isOpen, messages]);
+  }, [isOpen, messages, attachment]);
+
+  // Handle file & photo selection
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 15 * 1024 * 1024) {
+      alert('Ukuran berkas maksimal 15 MB.');
+      return;
+    }
+
+    const isImage = file.type.startsWith('image/');
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = reader.result;
+      setAttachment({
+        name: file.name,
+        type: file.type || (isImage ? 'image/jpeg' : 'application/octet-stream'),
+        size: file.size < 1024 * 1024 
+          ? (file.size / 1024).toFixed(1) + ' KB' 
+          : (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+        dataUrl: result,
+        base64: result,
+        isImage
+      });
+    };
+
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   const handleSend = async (textToSend) => {
     const query = (textToSend || input).trim();
-    if (!query || isLoading) return;
+    if ((!query && !attachment) || isLoading) return;
+
+    const currentAttachment = attachment ? { ...attachment } : null;
+    const displayText = query || (currentAttachment ? `Mengunggah ${currentAttachment.name}` : '');
 
     const userMessage = {
       id: Date.now().toString(),
       role: 'user',
-      text: query,
+      text: displayText,
+      attachment: currentAttachment,
       timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
+    setAttachment(null);
     setIsLoading(true);
 
     try {
@@ -86,7 +125,7 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
           text: m.text
         }));
 
-      const res = await api.chatWithAi(query, history);
+      const res = await api.chatWithAi(query, history, currentAttachment);
       
       const botMessage = {
         id: (Date.now() + 1).toString(),
@@ -123,10 +162,11 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
       {
         id: 'welcome',
         role: 'assistant',
-        text: `Percakapan telah direset. Silakan ceritakan kendala operasional mesin di lini produksi, atau tanyakan seputar **SOP penanganan mandiri Operator**, **tindakan perbaikan Teknisi**, dan **penerbitan tiket/SPK**.`,
+        text: `Percakapan telah direset. Silakan ceritakan kendala operasional mesin di lini produksi, atau unggah foto/berkas kendala mesin untuk dianalisa.`,
         timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
       }
     ]);
+    setAttachment(null);
   };
 
   // Render teks markdown sederhana (bold, list, bullet, numbers)
@@ -178,6 +218,15 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
 
   return (
     <>
+      {/* Hidden File Input for Image/File Upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,.pdf,.txt,.log,.csv"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+
       {/* Floating Trigger Button (Always visible when chat is closed) */}
       {!isOpen && (
         <button
@@ -195,7 +244,7 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
               <span>Tanya AI Pakar</span>
               <Sparkles className="w-3 h-3 text-amber-400" />
             </span>
-            <span className="text-[10px] text-slate-300 font-mono">Gemini AI • 13 Use Case</span>
+            <span className="text-[10px] text-slate-300 font-mono">Troubleshooting • Plant Maintenance</span>
           </div>
         </button>
       )}
@@ -222,12 +271,12 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
                     <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                   </h3>
                   <span className="text-[9px] font-mono bg-blue-500/20 text-blue-300 border border-blue-400/30 px-1.5 py-0.2 rounded font-semibold">
-                    v1.0
+                    Plant AI
                   </span>
                 </div>
                 <p className="text-[10px] text-slate-300 flex items-center gap-1.5 font-medium">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>PT Vivo Mobile Indonesia • Gemini 3.5</span>
+                  <span>PT Vivo Mobile Indonesia • AI Troubleshooting</span>
                 </p>
               </div>
             </div>
@@ -257,7 +306,7 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
             </div>
           </div>
 
-          {/* Subheader Guardrail Notice */}
+          {/* Subheader Notice */}
           <div className="bg-slate-50 border-b border-slate-200 px-3.5 py-1.5 flex items-center justify-between text-[11px] text-slate-600">
             <span className="flex items-center gap-1.5 truncate">
               <span className="w-2 h-2 rounded-full bg-blue-500"></span>
@@ -301,6 +350,35 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
                           : 'bg-white text-slate-800 border border-slate-200/80 rounded-tl-none'
                       }`}
                     >
+                      {/* Attachment preview in message bubble */}
+                      {msg.attachment && (
+                        <div className="mb-2">
+                          {msg.attachment.isImage ? (
+                            <div 
+                              onClick={() => setPreviewImage(msg.attachment.dataUrl)}
+                              className="relative rounded-lg overflow-hidden border border-slate-200/40 max-w-[220px] max-h-[170px] cursor-pointer group bg-black/5"
+                              title="Klik untuk memperbesar foto"
+                            >
+                              <img 
+                                src={msg.attachment.dataUrl} 
+                                alt={msg.attachment.name} 
+                                className="w-full h-auto object-cover group-hover:scale-105 transition duration-200" 
+                              />
+                              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-[11px] font-medium gap-1">
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>Perbesar Foto</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-100 text-slate-800 text-[11px] border border-slate-200 font-mono">
+                              <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                              <span className="truncate max-w-[160px] font-semibold">{msg.attachment.name}</span>
+                              <span className="text-[9px] text-slate-400 shrink-0">({msg.attachment.size})</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {renderFormattedText(msg.text)}
                     </div>
                     <span className="text-[9px] text-slate-400 mt-1 font-mono px-1">
@@ -323,7 +401,7 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
                     <span className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></span>
                   </div>
                   <span className="text-[11px] text-slate-500 font-medium">
-                    Sedang menganalisis basis pengetahuan...
+                    Sedang menganalisis kendala & SOP mesin...
                   </span>
                 </div>
               </div>
@@ -346,32 +424,104 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
             ))}
           </div>
 
-          {/* Input Box */}
-          <div className="p-3 bg-white border-t border-slate-200">
-            <div className="relative flex items-center">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ceritakan kendala mesin (contoh: baut macet di ASM, lampu kuning AGM, overpressure)..."
-                disabled={isLoading}
-                className="w-full text-xs pl-3.5 pr-11 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50/50 disabled:bg-slate-100"
-              />
+          {/* Attachment Preview Chip Above Input */}
+          {attachment && (
+            <div className="px-3 pt-2 pb-1.5 bg-blue-50/70 border-t border-blue-100 flex items-center justify-between text-xs animate-fadeIn">
+              <div className="flex items-center gap-2.5 truncate">
+                {attachment.isImage ? (
+                  <img 
+                    src={attachment.dataUrl} 
+                    alt="Thumbnail" 
+                    className="w-8 h-8 rounded object-cover border border-blue-200 shrink-0" 
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                )}
+                <div className="truncate">
+                  <div className="text-[11px] font-semibold text-slate-800 truncate max-w-[220px]">
+                    {attachment.name}
+                  </div>
+                  <div className="text-[9px] text-blue-600 font-mono">
+                    {attachment.size} • {attachment.isImage ? 'Foto Siap Dianalisa' : 'Berkas Siap Dianalisa'}
+                  </div>
+                </div>
+              </div>
               <button
-                onClick={() => handleSend()}
-                disabled={!input.trim() || isLoading}
-                className="absolute right-1.5 p-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:bg-slate-200 disabled:text-slate-400 transition cursor-pointer"
-                title="Kirim Pesan"
+                type="button"
+                onClick={() => setAttachment(null)}
+                className="p-1 rounded-full text-slate-400 hover:text-rose-600 hover:bg-white transition cursor-pointer"
+                title="Hapus lampiran"
               >
-                <Send className="w-3.5 h-3.5" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
+          )}
+
+          {/* Input Box */}
+          <div className="p-3 bg-white border-t border-slate-200">
+            <div className="relative flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading}
+                className="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition shrink-0 cursor-pointer border border-transparent hover:border-slate-200"
+                title="Unggah Foto Kendala Mesin / Berkas Dokumen"
+              >
+                <Paperclip className="w-4 h-4" />
+              </button>
+
+              <div className="relative flex-1 flex items-center">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ceritakan kendala mesin atau unggah foto/berkas..."
+                  disabled={isLoading}
+                  className="w-full text-xs pl-3 pr-10 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50/50 disabled:bg-slate-100"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleSend()}
+                  disabled={(!input.trim() && !attachment) || isLoading}
+                  className="absolute right-1.5 p-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:bg-slate-200 disabled:text-slate-400 transition cursor-pointer"
+                  title="Kirim Pesan"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1.5 px-1">
-              <span>Tekan <strong>Enter</strong> untuk mengirim</span>
+              <span>Tekan <strong>Enter</strong> kirim • Klik 📎 lampirkan foto/file</span>
               <span className="font-mono text-[9px]">PT Vivo Mobile Indonesia</span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full Image Zoom Modal */}
+      {previewImage && (
+        <div 
+          onClick={() => setPreviewImage(null)}
+          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
+        >
+          <div className="relative max-w-3xl max-h-[90vh] bg-slate-900 rounded-2xl overflow-hidden shadow-2xl p-2 border border-slate-700">
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-slate-800/80 hover:bg-slate-700 text-white transition cursor-pointer"
+              title="Tutup Preview"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <img 
+              src={previewImage} 
+              alt="Preview Zoom" 
+              className="max-w-full max-h-[85vh] object-contain rounded-xl mx-auto" 
+            />
           </div>
         </div>
       )}

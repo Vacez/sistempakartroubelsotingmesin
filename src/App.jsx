@@ -240,6 +240,13 @@ export default function App() {
     setIsPrintModalOpen(true);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('expert_mech_user');
+    setCurrentUser(null);
+    setIsLoginModalOpen(true);
+    triggerToast('Anda telah berhasil keluar (logout) dari sistem.', 'info');
+  };
+
   const pendingTicketsCount = tickets.filter(t => t.status === 'Menunggu Teknisi').length;
 
   return (
@@ -263,7 +270,7 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         currentUser={currentUser}
-        onLogout={() => setIsLoginModalOpen(true)}
+        onLogout={handleLogout}
         onOpenChatbot={() => setIsChatbotOpen(true)}
         pendingTicketsCount={pendingTicketsCount}
         usersCount={users.length}
@@ -363,11 +370,15 @@ export default function App() {
       />
 
       <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
+        isOpen={isLoginModalOpen || !currentUser}
+        canClose={!!currentUser}
+        onClose={() => {
+          if (currentUser) setIsLoginModalOpen(false);
+        }}
         users={users}
         onLoginSuccess={(user) => {
           setCurrentUser(user);
+          setIsLoginModalOpen(false);
           if (user.role !== 'Admin' && activeTab === 'pengguna') {
             setActiveTab('diagnosa');
           }

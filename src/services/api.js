@@ -53,9 +53,9 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify(repairDetails),
     }),
-  chatWithAi: (message, history = []) =>
+  chatWithAi: (message, history = [], file = null) =>
     request('/chat', {
       method: 'POST',
-      body: JSON.stringify({ message, history }),
+      body: JSON.stringify({ message, history, file }),
     }),
 };
