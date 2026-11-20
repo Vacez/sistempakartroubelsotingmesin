@@ -5,14 +5,17 @@ import {
   Factory, 
   LogOut, 
   User,
-  Users
+  Users,
+  Bot,
+  Sparkles
 } from 'lucide-react';
 
 export default function Navbar({ 
   activeTab, 
   setActiveTab, 
   currentUser, 
-  onLogout, 
+  onLogout,
+  onOpenChatbot, 
   pendingTicketsCount = 0,
   usersCount = 0,
   dbStatus = 'connecting'
@@ -140,6 +143,18 @@ export default function Navbar({
                 </div>
               </div>
             </div>
+
+            {onOpenChatbot && (
+              <button
+                onClick={onOpenChatbot}
+                className="text-xs px-2.5 py-1.5 rounded-lg border border-blue-200 bg-blue-50/80 hover:bg-blue-100 text-blue-700 transition flex items-center gap-1.5 font-medium cursor-pointer shadow-xs"
+                title="Buka Asisten AI Pakar Mesin"
+              >
+                <Bot className="w-3.5 h-3.5 text-blue-600" />
+                <span className="hidden md:inline">Tanya AI</span>
+                <Sparkles className="w-3 h-3 text-amber-500" />
+              </button>
+            )}
 
             <button
               onClick={onLogout}

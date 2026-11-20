@@ -7,6 +7,7 @@ import UserManagementView from './components/UserManagementView';
 import CallTechnicianModal from './components/CallTechnicianModal';
 import PrintSpkModal from './components/PrintSpkModal';
 import LoginModal from './components/LoginModal';
+import AiChatbot from './components/AiChatbot';
 
 import { 
   INITIAL_USERS, 
@@ -74,6 +75,7 @@ export default function App() {
   const [isCallTechModalOpen, setIsCallTechModalOpen] = useState(false);
   const [printModalData, setPrintModalData] = useState(null);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
   const triggerToast = (msg, type = 'success') => {
@@ -244,7 +246,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 animate-fadeIn">
+        <div className="fixed bottom-5 left-5 z-50 animate-fadeIn">
           <div className="px-3.5 py-2.5 rounded-lg shadow-lg text-xs font-medium text-white flex items-center gap-2 bg-slate-900 border border-slate-800">
             {toastMessage.type === 'urgent' ? (
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
@@ -262,6 +264,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         currentUser={currentUser}
         onLogout={() => setIsLoginModalOpen(true)}
+        onOpenChatbot={() => setIsChatbotOpen(true)}
         pendingTicketsCount={pendingTicketsCount}
         usersCount={users.length}
         dbStatus={dbStatus}
@@ -370,6 +373,13 @@ export default function App() {
           }
           triggerToast(`Berhasil masuk sebagai ${user.nama} (${user.role})`);
         }}
+      />
+
+      {/* AI Chatbot Assistant (Gemini API with Strict Domain Guardrail) */}
+      <AiChatbot
+        isOpen={isChatbotOpen}
+        setIsOpen={setIsChatbotOpen}
+        currentUser={currentUser}
       />
     </div>
   );

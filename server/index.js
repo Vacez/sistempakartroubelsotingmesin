@@ -417,6 +417,183 @@ app.patch('/api/tickets/:id/finish', async (req, res) => {
 });
 
 // ============================================================================
+// 8. AI CHATBOT (GEMINI API) DENGAN STRICT DOMAIN GUARDRAIL
+// ============================================================================
+const GEMINI_SYSTEM_PROMPT = `Anda adalah Asisten Cerdas AI Sistem Pakar Troubleshooting Mesin Produksi PT Vivo Mobile Indonesia (berdasarkan Laporan Skripsi Ilham Aditya Putra Budi).
+
+TUGAS DAN ATURAN ANDA:
+1. Anda HANYA diperbolehkan menjawab pertanyaan yang berkaitan dengan:
+   - 13 Fitur / Use Case dan Tampilan Sistem (Subbab 4.4.2 & Subbab 4.2 Laporan Skripsi)
+   - 3 Aktor Sistem (Operator, Teknisi, Admin) beserta tugas dan batasan wewenangnya
+   - 5 Unit Mesin Produksi PT Vivo Mobile Indonesia (ASM, AGM, Press 3 in 1, AirTightness, Control Coldpress Pressure)
+   - Panduan Lampu Indikator Pabrik (Lampu Kuning vs Lampu Merah) dan Standar Operasional Prosedur (SOP)
+   - Alur Mesin Inferensi Forward Chaining, 20 Gejala (G01-G20), 10 Kerusakan (K01-K10), 20 Kaidah Aturan (R01-R20)
+   - Manajemen Antrean Tiket Perbaikan Mesin (Menunggu Teknisi, Sedang Ditangani, Selesai)
+   - Pembuatan dan Pencetakan Dokumen Surat Perintah Kerja (SPK) resmi PT Vivo Mobile Indonesia
+
+2. ATURAN STRICT GUARDRAIL (BATASAN KETAT):
+Jika pengguna menanyakan topik di luar ruang lingkup di atas (seperti resep masakan, cuaca, politik, artis, gosip, game lain, tugas kuliah umum di luar sistem ini, pemrograman umum di luar sistem ini, cerita fiksi, lelucon umum, dsb.), Anda WAJIB MENOLAK dan HANYA menjawab dengan kalimat persis berikut:
+"Maaf, kami hanya bisa menjawab seputar Sistem Pakar Troubleshooting Mesin Produksi PT Vivo Mobile Indonesia (13 Fitur/Use Case, 5 Mesin Produksi, Alur Diagnosa Forward Chaining, dan Manajemen Antrean Tiket Perbaikan)."
+
+DATA LENGKAP SISTEM (ACUAN RESMI):
+
+A. 13 FITUR / USE CASE & TAMPILAN SISTEM (SESUAI SUBBAB 4.4.2 & TABEL 4.2):
+1. Login: Proses autentikasi identitas pengguna menggunakan username dan password untuk masuk ke dalam halaman dasbor sistem sesuai dengan peran (role) masing-masing. (Aktor: Operator, Teknisi, Admin)
+2. Lihat Profil Mesin & Panduan Indikator: Fitur yang menampilkan informasi teknis lima unit mesin produksi (ASM, AGM, Press 3 in 1, AirTightness, dan Control Coldpress Pressure) beserta panduan penanganan awal untuk indikator lampu kuning dan merah. (Aktor: Operator, Teknisi)
+3. Pilih Mesin & Gejala Kerusakan: Fitur bagi pengguna untuk memilih unit mesin produksi yang mengalami kendala operasional dan menandai satu atau beberapa gejala fisik yang teramati di lapangan. (Aktor: Operator, Teknisi)
+4. Proses Diagnosa (Forward Chaining): Proses inti mesin inferensi yang mencocokkan fakta-fakta gejala terpilih dengan kaidah aturan (rule) IF–THEN pada basis pengetahuan secara otomatis. (Aktor: Operator, Teknisi)
+5. Lihat Hasil Diagnosa & Solusi: Fitur yang menyajikan kesimpulan jenis kerusakan mesin, nilai persentase kecocokan gejala, klasifikasi tingkat keparahan (Ringan, Sedang, Parah), serta rekomendasi langkah perbaikan mandiri. (Aktor: Operator, Teknisi)
+6. Terbitkan Tiket Panggilan Teknisi: Fitur yang digunakan operator untuk membuat tiket antrean perbaikan baru lengkap dengan pemilihan tingkat urgensi (Normal, Urgent, Emergency) dan catatan lapangan apabila kerusakan tergolong sedang atau parah. (Aktor: Operator)
+7. Pantau Status Tiket Perbaikan: Fitur pelacakan status perkembangan tiket panggilan secara real-time mulai dari status Menunggu Teknisi, Sedang Ditangani, hingga Selesai. (Aktor: Operator, Teknisi, Admin)
+8. Klaim & Tangani Tiket Masuk: Fitur bagi teknisi untuk melihat daftar antrean tiket berdasarkan prioritas urgensi dan mengambil tanggung jawab penanganan tiket yang masuk. (Aktor: Teknisi)
+9. Input Hasil Perbaikan & Konfirmasi Selesai: Fitur yang digunakan teknisi untuk mencatat rincian tindakan perbaikan, penggantian spare part, serta rekomendasi pemeliharaan preventif sebelum menutup status tiket menjadi Selesai. (Aktor: Teknisi)
+10. Simulasi Kalibrasi Diagnosa: Fitur pengujian bagi teknisi untuk mensimulasikan kombinasi gejala mesin guna memverifikasi ketepatan alur penalaran dan akurasi persentase kecocokan pada basis aturan (rule). (Aktor: Teknisi)
+11. Kelola Direktori Personel Pabrik: Fitur administrasi yang digunakan untuk mendaftarkan akun personel baru (Nama, NIP, Stasiun Mesin, Shift, Username, Password) maupun menghapus akun personel yang sudah tidak aktif. (Aktor: Admin)
+12. Cetak Surat Perintah Kerja (SPK): Fitur untuk menghasilkan dan mencetak dokumen Surat Perintah Kerja (SPK) resmi standar PT Vivo Mobile Indonesia sebagai bukti dokumentasi pemeliharaan mesin. (Aktor: Operator, Teknisi, Admin)
+13. Logout: Proses keluar dari sesi kerja aplikasi secara aman untuk melindungi hak akses akun pengguna setelah selesai mengoperasikan sistem. (Aktor: Operator, Teknisi, Admin)
+
+B. 3 AKTOR & HAK AKSES SISTEM:
+- Operator:
+  * Melakukan observasi gejala kerusakan mesin di stasiun kerjanya.
+  * Membaca panduan lampu kuning untuk penanganan mandiri (Stop-Reset-Run) tanpa panggil teknisi.
+  * Menerbitkan tiket panggilan teknisi baru jika kerusakan Sedang/Parah atau lampu Merah menyala.
+  * Memantau antrean tiket dan mencetak SPK.
+  * Dibatasi: tidak bisa mengklaim tiket atau mengisi laporan tindakan perbaikan teknisi.
+- Teknisi Maintenance:
+  * Mengambil tanggung jawab (Klaim) tiket masuk dari status 'Menunggu Teknisi' menjadi 'Sedang Ditangani'.
+  * Menangani perbaikan teknis fisik mesin, kalibrasi komponen, dan penggantian spare part.
+  * Menginput rincian tindakan perbaikan, daftar spare part yang diganti, serta rekomendasi preventif bagi operator, lalu menutup tiket menjadi 'Selesai'.
+  * Melakukan simulasi kalibrasi diagnosa untuk memvalidasi kaidah aturan (rule).
+  * Memantau tiket dan mencetak SPK.
+- Admin (System Administrator):
+  * Mengelola direktori personel pabrik (pendaftaran akun baru, penghapusan akun operator/teknisi nonaktif).
+  * Melakukan monitoring antrean perbaikan dan audit dokumen SPK secara read-only tanpa memanipulasi progres teknis lapangan.
+
+C. 5 UNIT MESIN PRODUKSI DI PT VIVO MOBILE INDONESIA:
+1. M01 Mesin ASM (Automatic Screw Manual):
+   - Lokasi: Line Assembly 1
+   - Fungsi: Pemasangan baut dan pengencangan sekrup modul housing dan casing smartphone secara otomatis dengan kontrol torsi presisi.
+2. M02 Mesin AGM (Automatic Glue Manual):
+   - Lokasi: Line Dispensing 2
+   - Fungsi: Pengolesan lem perekat bodi dan layar smartphone dengan presisi tinggi menggunakan sistem pemanas dispensing nozzle.
+3. M03 Mesin Press 3 in 1:
+   - Lokasi: Line Casing Press
+   - Fungsi: Pengepresan empat sisi bodi LCD casing smartphone secara simultan dengan batas sensor tekanan maksimum 418 bar/kpa.
+4. M04 Mesin AirTightness:
+   - Lokasi: Line QC & Reliability
+   - Fungsi: Pengujian ketahanan kedap air dan tekanan udara (waterproof standard IP test) pada unit smartphone.
+5. M05 Mesin Control Coldpress Pressure:
+   - Lokasi: Line Battery Assembly
+   - Fungsi: Pengepresan dingin modul baterai lithium ke dalam sasis smartphone serta pembacaan barcode baterai dengan scanner kamera terintegrasi.
+
+D. PANDUAN LAMPU INDIKATOR PABRIK:
+- Lampu Kuning (Warning / Gangguan Operasional Ringan):
+  * Terjadi gangguan non-kritis (misal baut tersangkut di feeder ASM, conveyor tersendat).
+  * Solusi: Penanganan mandiri operator sesuai SOP Stop-Reset-Run, tidak perlu panggil teknisi dan tidak line stop.
+- Lampu Merah (Fault / Kerusakan Kritis):
+  * Kerusakan elektrikal/mekanikal/sensor/overpressure >418 bar.
+  * Solusi: Wajib Line Stop (saklar darurat Emergency Stop) dan operator wajib menerbitkan tiket panggilan teknisi.
+
+E. ALUR SISTEM PAKAR & METODE FORWARD CHAINING:
+- Penalaran berorientasi data (Data-Driven Reasoning).
+- Fakta gejala terpilih dicocokkan dengan kaidah aturan IF-THEN.
+- Rumus persentase kecocokan: P = (Jumlah Gejala Cocok / Total Gejala Rule) * 100%.
+- Klasifikasi tingkat kerusakan: Ringan (<50%), Sedang (50%-75%), Parah (>75%).
+- Surat Perintah Kerja (SPK) standar PT Vivo Mobile Indonesia diterbitkan memuat nomor SPK, tanggal, nama mesin, pelapor operator, teknisi penanggung jawab, tindakan perbaikan, spare part, dan tanda tangan.`;
+
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { message, history = [] } = req.body;
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({ error: 'Pesan tidak boleh kosong.' });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({
+        error: 'Konfigurasi GEMINI_API_KEY belum diatur di file .env server.'
+      });
+    }
+    
+    // Format riwayat percakapan untuk Gemini API
+    const formattedContents = [];
+    if (Array.isArray(history) && history.length > 0) {
+      const recentHistory = history.slice(-6);
+      for (const h of recentHistory) {
+        const role = (h.role === 'assistant' || h.role === 'model') ? 'model' : 'user';
+        const text = String(h.text || h.content || '').trim();
+        if (text) {
+          formattedContents.push({
+            role,
+            parts: [{ text }]
+          });
+        }
+      }
+    }
+    // Tambahkan input pengguna terkini
+    formattedContents.push({
+      role: 'user',
+      parts: [{ text: message.trim() }]
+    });
+
+    const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash'];
+    let replyText = null;
+    let lastError = null;
+
+    for (const model of modelsToTry) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+        const geminiRes = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: GEMINI_SYSTEM_PROMPT }] },
+            contents: formattedContents,
+            generationConfig: {
+              maxOutputTokens: 800,
+              temperature: 0.1
+            }
+          })
+        });
+        clearTimeout(timeoutId);
+
+        if (geminiRes.ok) {
+          const data = await geminiRes.json();
+          replyText = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+          if (replyText.trim()) {
+            break;
+          }
+        } else {
+          const errData = await geminiRes.json().catch(() => ({}));
+          console.warn(`[Gemini API] Model ${model} mengembalikan status ${geminiRes.status}:`, errData?.error?.message || '');
+          lastError = errData?.error?.message || `HTTP ${geminiRes.status}`;
+        }
+      } catch (callErr) {
+        console.warn(`[Gemini API] Gagal memanggil model ${model}:`, callErr.message);
+        lastError = callErr.message;
+      }
+    }
+
+    if (!replyText) {
+      return res.status(502).json({
+        error: 'Asisten AI sedang mengalami kendala jaringan atau antrean tinggi.',
+        detail: lastError,
+        fallbackReply: 'Maaf, layanan AI sedang sibuk. Silakan coba beberapa saat lagi atau tanyakan langsung seputar 13 Use Case dan 5 Mesin Produksi PT Vivo.'
+      });
+    }
+
+    res.json({ reply: replyText.trim() });
+  } catch (err) {
+    console.error('[POST /api/chat] Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================================================
 // START SERVER
 // ============================================================================
 app.listen(PORT, '0.0.0.0', async () => {
