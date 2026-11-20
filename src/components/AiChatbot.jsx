@@ -17,21 +17,29 @@ import {
 import { api } from '../services/api';
 
 const QUICK_QUESTIONS = [
-  '📋 Sebutkan 13 Use Case sistem ini',
-  '⚙️ Apa fungsi 5 mesin produksi?',
-  '👷 Apa perbedaan wewenang Operator dan Teknisi?',
-  '💡 Jelaskan panduan lampu kuning vs merah',
-  '🔍 Bagaimana alur Forward Chaining?',
-  '📄 Kapan tiket dibuat dan bagaimana cetak SPK?'
+  '🔧 Baut macet di jalur feeder mesin ASM',
+  '🟡 Lampu kuning menyala di AGM (Conveyor tersendat)',
+  '🔴 Tekanan Press 3 in 1 di atas 418 & alarm bunyi',
+  '💧 Lem meluber / nozzle tersumbat di AGM',
+  '🔋 Kamera barcode baterai tidak terbaca di Coldpress',
+  '⚡ Kapan operator tangani mandiri vs panggil teknisi?',
+  '📋 Cara terbitkan tiket antrean perbaikan di sistem',
+  '📄 Prosedur pengisian tindakan teknisi & cetak SPK'
 ];
 
 export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
+  const roleTitle = currentUser?.role === 'Teknisi' 
+    ? 'Teknisi Maintenance' 
+    : currentUser?.role === 'Admin' 
+    ? 'Admin Sistem' 
+    : 'Operator Produksi';
+
   const [messages, setMessages] = useState(() => {
     return [
       {
         id: 'welcome',
         role: 'assistant',
-        text: `Halo **${currentUser?.nama || 'Rekan Pabrik'}**! 👋\n\nSaya **Asisten AI Sistem Pakar Troubleshooting Mesin Produksi PT Vivo Mobile Indonesia** yang ditenagai oleh Google Gemini AI.\n\nSaya siap membantu Anda memahami:\n- **13 Fitur / Use Case** & Tampilan Sistem (Subbab 4.4.2)\n- **3 Aktor Sistem**: Operator, Teknisi, & Admin\n- **5 Unit Mesin Produksi**: ASM, AGM, Press 3 in 1, AirTightness, & Control Coldpress\n- **SOP Lampu Indikator**: Kuning (Mandiri) vs Merah (Tiket Line Stop)\n- **Alur Forward Chaining** & Penerbitan SPK Resmi.\n\n*Catatan: Saya hanya dapat menjawab topik resmi terkait sistem ini.*`,
+        text: `Halo **${currentUser?.nama || 'Rekan Pabrik'}** (${roleTitle})! 👋\n\nSaya **Asisten AI Troubleshooting Mesin PT Vivo Mobile Indonesia**.\n\nAda kendala operasional atau alarm indikator pada mesin di lini produksi? Ceritakan masalah yang terjadi, misalnya:\n- Baut macet atau torsi NG pada Mesin ASM\n- Lampu kuning menyala / conveyor macet pada Mesin AGM\n- Tekanan melebihi batas 418 bar pada Mesin Press 3 in 1\n- Lem tidak keluar atau nozzle meluber pada Mesin AGM\n- Kebocoran selang pneumatik / uji AirTightness selalu NG\n- Kamera pemindai barcode baterai gagal baca di Coldpress\n\nSaya siap membantu mendampingi Anda:\n- 🔍 **Analisa Kerusakan**: Deteksi penyebab fisik & tingkat keparahan (Ringan/Sedang/Parah).\n- 🛠️ **Solusi Lapangan**: Langkah mandiri Operator (SOP Stop-Reset-Run) atau tindakan perbaikan Teknisi.\n- 🎫 **Alur Sistem Web**: Panduan penerbitan tiket antrean perbaikan dan pencetakan dokumen SPK resmi.`,
         timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
       }
     ];
@@ -115,19 +123,27 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
       {
         id: 'welcome',
         role: 'assistant',
-        text: `Percakapan telah direset. Silakan tanyakan kembali seputar **13 Use Case**, **5 Mesin Produksi**, atau **Alur Troubleshooting Forward Chaining** PT Vivo Mobile Indonesia.`,
+        text: `Percakapan telah direset. Silakan ceritakan kendala operasional mesin di lini produksi, atau tanyakan seputar **SOP penanganan mandiri Operator**, **tindakan perbaikan Teknisi**, dan **penerbitan tiket/SPK**.`,
         timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
       }
     ]);
   };
 
-  // Render teks markdown sederhana (bold, list, bullet)
+  // Render teks markdown sederhana (bold, list, bullet, numbers)
   const renderFormattedText = (text) => {
     if (!text) return null;
     const lines = text.split('\n');
     return lines.map((line, idx) => {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        return <div key={idx} className="h-1.5" />;
+      }
+
+      const isBullet = trimmed.startsWith('- ') || trimmed.startsWith('* ');
+      const rawContent = isBullet ? trimmed.replace(/^[-*]\s+/, '') : line;
+
       // Format bold text **text**
-      const parts = line.split(/(\*\*.*?\*\*)/g);
+      const parts = rawContent.split(/(\*\*.*?\*\*)/g);
       const formattedParts = parts.map((part, pIdx) => {
         if (part.startsWith('**') && part.endsWith('**')) {
           return <strong key={pIdx} className="font-semibold text-slate-900">{part.slice(2, -2)}</strong>;
@@ -135,29 +151,25 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
         return part;
       });
 
-      if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
+      if (isBullet) {
         return (
           <div key={idx} className="flex items-start gap-2 my-1 pl-1">
-            <span className="text-blue-500 font-bold">•</span>
-            <span className="flex-1">{formattedParts}</span>
+            <span className="text-blue-500 font-bold leading-none mt-1 shrink-0">•</span>
+            <span className="flex-1 leading-relaxed text-slate-800">{formattedParts}</span>
           </div>
         );
       }
 
-      if (/^\d+\.\s/.test(line.trim())) {
+      if (/^\d+\.\s/.test(trimmed)) {
         return (
-          <div key={idx} className="my-1 pl-1 text-slate-800">
+          <div key={idx} className="my-1 pl-1 text-slate-800 font-medium leading-relaxed">
             {formattedParts}
           </div>
         );
       }
 
-      if (!line.trim()) {
-        return <div key={idx} className="h-2" />;
-      }
-
       return (
-        <p key={idx} className="my-0.5 leading-relaxed">
+        <p key={idx} className="my-0.5 leading-relaxed text-slate-800">
           {formattedParts}
         </p>
       );
@@ -249,10 +261,10 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
           <div className="bg-slate-50 border-b border-slate-200 px-3.5 py-1.5 flex items-center justify-between text-[11px] text-slate-600">
             <span className="flex items-center gap-1.5 truncate">
               <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-              <span className="truncate">Fokus: <strong>13 Use Case</strong>, <strong>5 Mesin</strong> & <strong>SOP Indikator</strong></span>
+              <span className="truncate">Fokus: <strong>Troubleshooting Lini Perakitan</strong> & <strong>SOP Mesin PT Vivo</strong></span>
             </span>
-            <span className="text-[10px] font-mono text-slate-400 bg-white border border-slate-200 px-1.5 py-0.5 rounded shrink-0">
-              Strict Guardrail
+            <span className="text-[10px] font-mono font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded shrink-0">
+              SOP Lapangan
             </span>
           </div>
 
@@ -343,7 +355,7 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Tanyakan use case, mesin, atau alur diagnosa..."
+                placeholder="Ceritakan kendala mesin (contoh: baut macet di ASM, lampu kuning AGM, overpressure)..."
                 disabled={isLoading}
                 className="w-full text-xs pl-3.5 pr-11 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50/50 disabled:bg-slate-100"
               />
