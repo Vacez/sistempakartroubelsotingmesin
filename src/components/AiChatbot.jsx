@@ -170,7 +170,7 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
   };
 
   // Render teks markdown sederhana (bold, list, bullet, numbers)
-  const renderFormattedText = (text) => {
+  const renderFormattedText = (text, isUser = false) => {
     if (!text) return null;
     const lines = text.split('\n');
     return lines.map((line, idx) => {
@@ -186,7 +186,14 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
       const parts = rawContent.split(/(\*\*.*?\*\*)/g);
       const formattedParts = parts.map((part, pIdx) => {
         if (part.startsWith('**') && part.endsWith('**')) {
-          return <strong key={pIdx} className="font-semibold text-slate-900">{part.slice(2, -2)}</strong>;
+          return (
+            <strong 
+              key={pIdx} 
+              className={isUser ? "font-bold text-white" : "font-semibold text-slate-900"}
+            >
+              {part.slice(2, -2)}
+            </strong>
+          );
         }
         return part;
       });
@@ -194,22 +201,22 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
       if (isBullet) {
         return (
           <div key={idx} className="flex items-start gap-2 my-1 pl-1">
-            <span className="text-blue-500 font-bold leading-none mt-1 shrink-0">•</span>
-            <span className="flex-1 leading-relaxed text-slate-800">{formattedParts}</span>
+            <span className={`${isUser ? 'text-blue-200' : 'text-blue-500'} font-bold leading-none mt-1 shrink-0`}>•</span>
+            <span className={`flex-1 leading-relaxed ${isUser ? 'text-white' : 'text-slate-800'}`}>{formattedParts}</span>
           </div>
         );
       }
 
       if (/^\d+\.\s/.test(trimmed)) {
         return (
-          <div key={idx} className="my-1 pl-1 text-slate-800 font-medium leading-relaxed">
+          <div key={idx} className={`my-1 pl-1 ${isUser ? 'text-white' : 'text-slate-800'} font-medium leading-relaxed`}>
             {formattedParts}
           </div>
         );
       }
 
       return (
-        <p key={idx} className="my-0.5 leading-relaxed text-slate-800">
+        <p key={idx} className={`my-0.5 leading-relaxed ${isUser ? 'text-white' : 'text-slate-800'}`}>
           {formattedParts}
         </p>
       );
@@ -344,7 +351,7 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
                     <div
                       className={`px-3.5 py-2.5 rounded-2xl shadow-sm text-xs leading-relaxed ${
                         isUser
-                          ? 'bg-slate-900 text-white rounded-tr-none'
+                          ? 'bg-blue-600 text-white rounded-tr-none shadow-sm font-normal'
                           : msg.isError
                           ? 'bg-rose-50 text-rose-800 border border-rose-200 rounded-tl-none'
                           : 'bg-white text-slate-800 border border-slate-200/80 rounded-tl-none'
@@ -370,16 +377,20 @@ export default function AiChatbot({ isOpen, setIsOpen, currentUser }) {
                               </div>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-100 text-slate-800 text-[11px] border border-slate-200 font-mono">
-                              <FileText className="w-4 h-4 text-blue-600 shrink-0" />
-                              <span className="truncate max-w-[160px] font-semibold">{msg.attachment.name}</span>
-                              <span className="text-[9px] text-slate-400 shrink-0">({msg.attachment.size})</span>
+                            <div className={`flex items-center gap-2 p-2 rounded-lg text-[11px] font-mono ${
+                              isUser 
+                                ? 'bg-white/15 text-white border border-white/20' 
+                                : 'bg-slate-100 text-slate-800 border border-slate-200'
+                            }`}>
+                              <FileText className={`w-4 h-4 shrink-0 ${isUser ? 'text-blue-100' : 'text-blue-600'}`} />
+                              <span className={`truncate max-w-[160px] font-semibold ${isUser ? 'text-white' : 'text-slate-800'}`}>{msg.attachment.name}</span>
+                              <span className={`text-[9px] shrink-0 ${isUser ? 'text-blue-100' : 'text-slate-400'}`}>({msg.attachment.size})</span>
                             </div>
                           )}
                         </div>
                       )}
 
-                      {renderFormattedText(msg.text)}
+                      {renderFormattedText(msg.text, isUser)}
                     </div>
                     <span className="text-[9px] text-slate-400 mt-1 font-mono px-1">
                       {msg.timestamp}
