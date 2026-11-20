@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Class Diagram Database - Sistem Pakar Troubleshooting Mesin</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 15px;
+      background: #ffffff;
+      font-family: Arial, Helvetica, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .title-banner {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .title-banner h2 {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0 0 4px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .title-banner p {
+      font-size: 12px;
+      color: #555555;
+      margin: 0;
+    }
+    .diagram-frame {
+      border: 1px solid #000000;
+      background: #ffffff;
+      display: inline-block;
+    }
+    @media print {
+      body {
+        padding: 0;
+      }
+      .diagram-frame {
+        border: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="title-banner">
+    <h2>CLASS DIAGRAM DATABASE (RELATIONAL MODEL 3NF)</h2>
+    <p>Sistem Pakar Troubleshooting Mesin Produksi &bull; PT Vivo Mobile Indonesia</p>
+  </div>
+  <div class="diagram-frame">
+    <svg width="1340" height="910" viewBox="0 0 1340 910" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Arrowhead Marker (Standard solid black triangle like StarUML/Draw.io) -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#000000" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1340" height="910" fill="#ffffff" />
+
+  <!-- ======================================================== -->
+  <!-- RELATIONSHIP CONNECTOR LINES                             -->
+  <!-- ======================================================== -->
+  <g stroke="#000000" stroke-width="1.3" fill="none">
+    
+    <!-- 1. tb_user -> tb_diagnosa (via id_user) -->
+    <path d="M 370 105 L 430 105" marker-end="url(#arrow)" />
+
+    <!-- 2. tb_user -> tb_tiket_perbaikan (via id_operator) -->
+    <path d="M 205 60 L 205 30 L 1085 30 L 1085 60" marker-end="url(#arrow)" />
+
+    <!-- 3. tb_mesin -> tb_gejala (via mesin_id) -->
+    <path d="M 370 455 L 430 455" marker-end="url(#arrow)" />
+
+    <!-- 4. tb_mesin -> tb_diagnosa (via id_mesin) -->
+    <path d="M 370 425 L 400 425 L 400 130 L 430 130" marker-end="url(#arrow)" />
+
+    <!-- 5. tb_mesin -> tb_tiket_perbaikan (via id_mesin) -->
+    <path d="M 205 605 L 205 885 L 845 885 L 845 130 L 870 130" marker-end="url(#arrow)" />
+
+    <!-- 6. tb_gejala -> tb_rule (via kode_gejala) -->
+    <path d="M 620 580 L 620 630" marker-end="url(#arrow)" />
+
+    <!-- 7. tb_kerusakan -> tb_rule (via kode_kerusakan) -->
+    <path d="M 870 650 L 830 650 L 830 700 L 810 700" marker-end="url(#arrow)" />
+
+    <!-- 8. tb_kerusakan -> tb_diagnosa (via id_kerusakan) -->
+    <path d="M 870 575 L 830 575 L 830 150 L 810 150" marker-end="url(#arrow)" />
+
+    <!-- 9. tb_diagnosa -> tb_tiket_perbaikan (via id_diagnosa) -->
+    <path d="M 810 80 L 870 80" marker-end="url(#arrow)" />
+
+  </g>
+
+  <!-- TABLE: tb_user -->
+  <g id="tbl_tb_user">
+    <rect x="40" y="60" width="330" height="238" fill="#ffffff" stroke="#000000" stroke-width="1.5" />
+    <text x="205.0" y="79" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold" text-anchor="middle">tb_user</text>
+    <line x1="40" y1="88" x2="370" y2="88" stroke="#000000" stroke-width="1.2" />
+    <line x1="74" y1="88" x2="74" y2="298" stroke="#000000" stroke-width="1.0" />
+    <text x="57.0" y="103" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="81" y="103" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">id</tspan><tspan> VARCHAR(20) NOT NULL</tspan></text>
+    <line x1="40" y1="109" x2="370" y2="109" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="124" font-family="Arial, Helvetica, sans-serif" font-size="10.5">username VARCHAR(60) NOT NULL UNIQUE</text>
+    <line x1="40" y1="130" x2="370" y2="130" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="145" font-family="Arial, Helvetica, sans-serif" font-size="10.5">password VARCHAR(100) NOT NULL</text>
+    <line x1="40" y1="151" x2="370" y2="151" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="166" font-family="Arial, Helvetica, sans-serif" font-size="10.5">role ENUM('Operator','Teknisi','Admin') NOT NULL</text>
+    <line x1="40" y1="172" x2="370" y2="172" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="187" font-family="Arial, Helvetica, sans-serif" font-size="10.5">nama VARCHAR(120) NOT NULL</text>
+    <line x1="40" y1="193" x2="370" y2="193" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="208" font-family="Arial, Helvetica, sans-serif" font-size="10.5">jabatan VARCHAR(150) NOT NULL</text>
+    <line x1="40" y1="214" x2="370" y2="214" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="229" font-family="Arial, Helvetica, sans-serif" font-size="10.5">avatar VARCHAR(10) NOT NULL DEFAULT 'OP'</text>
+    <line x1="40" y1="235" x2="370" y2="235" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="250" font-family="Arial, Helvetica, sans-serif" font-size="10.5">nip VARCHAR(40) NOT NULL</text>
+    <line x1="40" y1="256" x2="370" y2="256" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="271" font-family="Arial, Helvetica, sans-serif" font-size="10.5">shift VARCHAR(50) NOT NULL</text>
+    <line x1="40" y1="277" x2="370" y2="277" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="292" font-family="Arial, Helvetica, sans-serif" font-size="10.5">created_at TIMESTAMP DEFAULT CURRENT_TIME</text>
+  </g>
+
+  <!-- TABLE: tb_mesin -->
+  <g id="tbl_tb_mesin">
+    <rect x="40" y="405" width="330" height="196" fill="#ffffff" stroke="#000000" stroke-width="1.5" />
+    <text x="205.0" y="424" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold" text-anchor="middle">tb_mesin</text>
+    <line x1="40" y1="433" x2="370" y2="433" stroke="#000000" stroke-width="1.2" />
+    <line x1="74" y1="433" x2="74" y2="601" stroke="#000000" stroke-width="1.0" />
+    <text x="57.0" y="448" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="81" y="448" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">id</tspan><tspan> VARCHAR(20) NOT NULL</tspan></text>
+    <line x1="40" y1="454" x2="370" y2="454" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="469" font-family="Arial, Helvetica, sans-serif" font-size="10.5">kode VARCHAR(30) NOT NULL UNIQUE</text>
+    <line x1="40" y1="475" x2="370" y2="475" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="490" font-family="Arial, Helvetica, sans-serif" font-size="10.5">nama VARCHAR(120) NOT NULL</text>
+    <line x1="40" y1="496" x2="370" y2="496" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="511" font-family="Arial, Helvetica, sans-serif" font-size="10.5">fungsi TEXT NOT NULL</text>
+    <line x1="40" y1="517" x2="370" y2="517" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="532" font-family="Arial, Helvetica, sans-serif" font-size="10.5">lokasi VARCHAR(150) NOT NULL</text>
+    <line x1="40" y1="538" x2="370" y2="538" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="553" font-family="Arial, Helvetica, sans-serif" font-size="10.5">icon VARCHAR(40) DEFAULT 'Wrench'</text>
+    <line x1="40" y1="559" x2="370" y2="559" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="574" font-family="Arial, Helvetica, sans-serif" font-size="10.5">status VARCHAR(30) NOT NULL DEFAULT 'Aktif'</text>
+    <line x1="40" y1="580" x2="370" y2="580" stroke="#000000" stroke-width="0.75" />
+    <text x="81" y="595" font-family="Arial, Helvetica, sans-serif" font-size="10.5">deskripsi TEXT</text>
+  </g>
+
+  <!-- TABLE: tb_diagnosa -->
+  <g id="tbl_tb_diagnosa">
+    <rect x="430" y="60" width="380" height="302" fill="#ffffff" stroke="#000000" stroke-width="1.5" />
+    <text x="620.0" y="79" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold" text-anchor="middle">tb_diagnosa</text>
+    <line x1="430" y1="88" x2="810" y2="88" stroke="#000000" stroke-width="1.2" />
+    <line x1="464" y1="88" x2="464" y2="298" stroke="#000000" stroke-width="1.0" />
+    <text x="447.0" y="103" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="471" y="103" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">id</tspan><tspan> VARCHAR(30) NOT NULL</tspan></text>
+    <line x1="430" y1="109" x2="810" y2="109" stroke="#000000" stroke-width="0.75" />
+    <text x="447.0" y="124" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="471" y="124" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">id_user</tspan><tspan> VARCHAR(20) NOT NULL</tspan></text>
+    <line x1="430" y1="130" x2="810" y2="130" stroke="#000000" stroke-width="0.75" />
+    <text x="447.0" y="145" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="471" y="145" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">id_mesin</tspan><tspan> VARCHAR(20) NOT NULL</tspan></text>
+    <line x1="430" y1="151" x2="810" y2="151" stroke="#000000" stroke-width="0.75" />
+    <text x="447.0" y="166" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="471" y="166" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">id_kerusakan</tspan><tspan> VARCHAR(20) NOT NULL</tspan></text>
+    <line x1="430" y1="172" x2="810" y2="172" stroke="#000000" stroke-width="0.75" />
+    <text x="471" y="187" font-family="Arial, Helvetica, sans-serif" font-size="10.5">gejala_terpilih TEXT NOT NULL</text>
+    <line x1="430" y1="193" x2="810" y2="193" stroke="#000000" stroke-width="0.75" />
+    <text x="471" y="208" font-family="Arial, Helvetica, sans-serif" font-size="10.5">tingkat VARCHAR(30) NOT NULL</text>
+    <line x1="430" y1="214" x2="810" y2="214" stroke="#000000" stroke-width="0.75" />
+    <text x="471" y="229" font-family="Arial, Helvetica, sans-serif" font-size="10.5">persentase INT NOT NULL DEFAULT 100</text>
+    <line x1="430" y1="235" x2="810" y2="235" stroke="#000000" stroke-width="0.75" />
+    <text x="471" y="250" font-family="Arial, Helvetica, sans-serif" font-size="10.5">solusi TEXT</text>
+    <line x1="430" y1="256" x2="810" y2="256" stroke="#000000" stroke-width="0.75" />
+    <text x="471" y="271" font-family="Arial, Helvetica, sans-serif" font-size="10.5">status_panggilan VARCHAR(40) NOT NULL</text>
+    <line x1="430" y1="277" x2="810" y2="277" stroke="#000000" stroke-width="0.75" />
+    <text x="471" y="292" font-family="Arial, Helvetica, sans-serif" font-size="10.5">created_at TIMESTAMP DEFAULT CURRENT_TIME</text>
+    <line x1="430" y1="298" x2="810" y2="298" stroke="#000000" stroke-width="1.2" />
+    <text x="438" y="313" font-family="Arial, Helvetica, sans-serif" font-size="10.5">FOREIGN KEY (id_user) REFERENCES tb_user(id)</text>
+    <text x="438" y="331" font-family="Arial, Helvetica, sans-serif" font-size="10.5">FOREIGN KEY (id_mesin) REFERENCES tb_mesin(id)</text>
+    <text x="438" y="349" font-family="Arial, Helvetica, sans-serif" font-size="10.5">FOREIGN KEY (id_kerusakan) REFERENCES tb_kerusakan(kode)</text>
+  </g>
+
+  <!-- TABLE: tb_gejala -->
+  <g id="tbl_tb_gejala">
+    <rect x="430" y="420" width="380" height="161" fill="#ffffff" stroke="#000000" stroke-width="1.5" />
+    <text x="620.0" y="439" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold" text-anchor="middle">tb_gejala</text>
+    <line x1="430" y1="448" x2="810" y2="448" stroke="#000000" stroke-width="1.2" />
+    <line x1="464" y1="448" x2="464" y2="553" stroke="#000000" stroke-width="1.0" />
+    <text x="447.0" y="463" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="471" y="463" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">kode</tspan><tspan> VARCHAR(20) NOT NULL</tspan></text>
+    <line x1="430" y1="469" x2="810" y2="469" stroke="#000000" stroke-width="0.75" />
+    <text x="447.0" y="484" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="471" y="484" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">mesin_id</tspan><tspan> VARCHAR(20) NOT NULL</tspan></text>
+    <line x1="430" y1="490" x2="810" y2="490" stroke="#000000" stroke-width="0.75" />
+    <text x="471" y="505" font-family="Arial, Helvetica, sans-serif" font-size="10.5">id VARCHAR(20) NOT NULL</text>
+    <line x1="430" y1="511" x2="810" y2="511" stroke="#000000" stroke-width="0.75" />
+    <text x="471" y="526" font-family="Arial, Helvetica, sans-serif" font-size="10.5">nama TEXT NOT NULL</text>
+    <line x1="430" y1="532" x2="810" y2="532" stroke="#000000" stroke-width="0.75" />
+    <text x="471" y="547" font-family="Arial, Helvetica, sans-serif" font-size="10.5">kategori VARCHAR(50) NOT NULL</text>
+    <line x1="430" y1="553" x2="810" y2="553" stroke="#000000" stroke-width="1.2" />
+    <text x="438" y="568" font-family="Arial, Helvetica, sans-serif" font-size="10.5">FOREIGN KEY (mesin_id) REFERENCES tb_mesin(id)</text>
+  </g>
+
+  <!-- TABLE: tb_rule -->
+  <g id="tbl_tb_rule">
+    <rect x="430" y="630" width="380" height="200" fill="#ffffff" stroke="#000000" stroke-width="1.5" />
+    <text x="620.0" y="649" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold" text-anchor="middle">tb_rule</text>
+    <line x1="430" y1="658" x2="810" y2="658" stroke="#000000" stroke-width="1.2" />
+    <line x1="464" y1="658" x2="464" y2="784" stroke="#000000" stroke-width="1.0" />
+    <text x="447.0" y="673" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="471" y="673" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">id</tspan><tspan> VARCHAR(20) NOT NULL</tspan></text>
+    <line x1="430" y1="679" x2="810" y2="679" stroke="#000000" stroke-width="0.75" />
+    <text x="447.0" y="694" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="471" y="694" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">kode_gejala</tspan><tspan> VARCHAR(20) NOT NULL</tspan></text>
+    <line x1="430" y1="700" x2="810" y2="700" stroke="#000000" stroke-width="0.75" />
+    <text x="447.0" y="715" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="471" y="715" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">kode_kerusakan</tspan><tspan> VARCHAR(20) NOT NULL</tspan></text>
+    <line x1="430" y1="721" x2="810" y2="721" stroke="#000000" stroke-width="0.75" />
+    <text x="471" y="736" font-family="Arial, Helvetica, sans-serif" font-size="10.5">nama_rule VARCHAR(180) NOT NULL</text>
+    <line x1="430" y1="742" x2="810" y2="742" stroke="#000000" stroke-width="0.75" />
+    <text x="471" y="757" font-family="Arial, Helvetica, sans-serif" font-size="10.5">bobot DECIMAL(4,2) NOT NULL DEFAULT 1.00</text>
+    <line x1="430" y1="763" x2="810" y2="763" stroke="#000000" stroke-width="0.75" />
+    <text x="471" y="778" font-family="Arial, Helvetica, sans-serif" font-size="10.5">kondisi TEXT NOT NULL</text>
+    <line x1="430" y1="784" x2="810" y2="784" stroke="#000000" stroke-width="1.2" />
+    <text x="438" y="799" font-family="Arial, Helvetica, sans-serif" font-size="10.5">FOREIGN KEY (kode_gejala) REFERENCES tb_gejala(kode)</text>
+    <text x="438" y="817" font-family="Arial, Helvetica, sans-serif" font-size="10.5">FOREIGN KEY (kode_kerusakan) REFERENCES tb_kerusakan(kode)</text>
+  </g>
+
+  <!-- TABLE: tb_tiket_perbaikan -->
+  <g id="tbl_tb_tiket_perbaikan">
+    <rect x="870" y="60" width="430" height="365" fill="#ffffff" stroke="#000000" stroke-width="1.5" />
+    <text x="1085.0" y="79" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold" text-anchor="middle">tb_tiket_perbaikan</text>
+    <line x1="870" y1="88" x2="1300" y2="88" stroke="#000000" stroke-width="1.2" />
+    <line x1="904" y1="88" x2="904" y2="361" stroke="#000000" stroke-width="1.0" />
+    <text x="887.0" y="103" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="911" y="103" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">id</tspan><tspan> VARCHAR(30) NOT NULL</tspan></text>
+    <line x1="870" y1="109" x2="1300" y2="109" stroke="#000000" stroke-width="0.75" />
+    <text x="887.0" y="124" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="911" y="124" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">id_operator</tspan><tspan> VARCHAR(20) NOT NULL</tspan></text>
+    <line x1="870" y1="130" x2="1300" y2="130" stroke="#000000" stroke-width="0.75" />
+    <text x="887.0" y="145" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="911" y="145" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">id_mesin</tspan><tspan> VARCHAR(20) NOT NULL</tspan></text>
+    <line x1="870" y1="151" x2="1300" y2="151" stroke="#000000" stroke-width="0.75" />
+    <text x="887.0" y="166" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="911" y="166" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">id_diagnosa</tspan><tspan> VARCHAR(30) DEFAULT NULL</tspan></text>
+    <line x1="870" y1="172" x2="1300" y2="172" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="187" font-family="Arial, Helvetica, sans-serif" font-size="10.5">lokasi VARCHAR(150) NOT NULL</text>
+    <line x1="870" y1="193" x2="1300" y2="193" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="208" font-family="Arial, Helvetica, sans-serif" font-size="10.5">kerusakan VARCHAR(180) NOT NULL</text>
+    <line x1="870" y1="214" x2="1300" y2="214" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="229" font-family="Arial, Helvetica, sans-serif" font-size="10.5">tingkat VARCHAR(30) NOT NULL DEFAULT 'Parah'</text>
+    <line x1="870" y1="235" x2="1300" y2="235" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="250" font-family="Arial, Helvetica, sans-serif" font-size="10.5">urgensi ENUM('Normal','Urgent','Emergency') NOT NULL</text>
+    <line x1="870" y1="256" x2="1300" y2="256" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="271" font-family="Arial, Helvetica, sans-serif" font-size="10.5">status ENUM('Menunggu Teknisi','Sedang Ditangani','Selesai')</text>
+    <line x1="870" y1="277" x2="1300" y2="277" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="292" font-family="Arial, Helvetica, sans-serif" font-size="10.5">teknisi_penanggung VARCHAR(120) DEFAULT NULL</text>
+    <line x1="870" y1="298" x2="1300" y2="298" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="313" font-family="Arial, Helvetica, sans-serif" font-size="10.5">tindakan_teknisi TEXT</text>
+    <line x1="870" y1="319" x2="1300" y2="319" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="334" font-family="Arial, Helvetica, sans-serif" font-size="10.5">rekomendasi_teknisi TEXT</text>
+    <line x1="870" y1="340" x2="1300" y2="340" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="355" font-family="Arial, Helvetica, sans-serif" font-size="10.5">created_at TIMESTAMP DEFAULT CURRENT_TIME</text>
+    <line x1="870" y1="361" x2="1300" y2="361" stroke="#000000" stroke-width="1.2" />
+    <text x="878" y="376" font-family="Arial, Helvetica, sans-serif" font-size="10.5">FOREIGN KEY (id_operator) REFERENCES tb_user(id)</text>
+    <text x="878" y="394" font-family="Arial, Helvetica, sans-serif" font-size="10.5">FOREIGN KEY (id_mesin) REFERENCES tb_mesin(id)</text>
+    <text x="878" y="412" font-family="Arial, Helvetica, sans-serif" font-size="10.5">FOREIGN KEY (id_diagnosa) REFERENCES tb_diagnosa(id)</text>
+  </g>
+
+  <!-- TABLE: tb_kerusakan -->
+  <g id="tbl_tb_kerusakan">
+    <rect x="870" y="550" width="430" height="217" fill="#ffffff" stroke="#000000" stroke-width="1.5" />
+    <text x="1085.0" y="569" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold" text-anchor="middle">tb_kerusakan</text>
+    <line x1="870" y1="578" x2="1300" y2="578" stroke="#000000" stroke-width="1.2" />
+    <line x1="904" y1="578" x2="904" y2="767" stroke="#000000" stroke-width="1.0" />
+    <text x="887.0" y="593" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">PK</text>
+    <text x="911" y="593" font-family="Arial, Helvetica, sans-serif" font-size="10.5"><tspan text-decoration="underline" font-weight="bold">kode</tspan><tspan> VARCHAR(20) NOT NULL</tspan></text>
+    <line x1="870" y1="599" x2="1300" y2="599" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="614" font-family="Arial, Helvetica, sans-serif" font-size="10.5">id VARCHAR(20) NOT NULL</text>
+    <line x1="870" y1="620" x2="1300" y2="620" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="635" font-family="Arial, Helvetica, sans-serif" font-size="10.5">nama VARCHAR(180) NOT NULL</text>
+    <line x1="870" y1="641" x2="1300" y2="641" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="656" font-family="Arial, Helvetica, sans-serif" font-size="10.5">tingkat ENUM('Ringan','Sedang','Parah') NOT NULL</text>
+    <line x1="870" y1="662" x2="1300" y2="662" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="677" font-family="Arial, Helvetica, sans-serif" font-size="10.5">kategori VARCHAR(60) NOT NULL</text>
+    <line x1="870" y1="683" x2="1300" y2="683" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="698" font-family="Arial, Helvetica, sans-serif" font-size="10.5">penanganan_oleh VARCHAR(40) NOT NULL</text>
+    <line x1="870" y1="704" x2="1300" y2="704" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="719" font-family="Arial, Helvetica, sans-serif" font-size="10.5">solusi TEXT NOT NULL</text>
+    <line x1="870" y1="725" x2="1300" y2="725" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="740" font-family="Arial, Helvetica, sans-serif" font-size="10.5">tindakan_operator TEXT</text>
+    <line x1="870" y1="746" x2="1300" y2="746" stroke="#000000" stroke-width="0.75" />
+    <text x="911" y="761" font-family="Arial, Helvetica, sans-serif" font-size="10.5">rekomendasi_teknisi TEXT</text>
+  </g>
+
+</svg>
+  </div>
+</body>
+</html>
