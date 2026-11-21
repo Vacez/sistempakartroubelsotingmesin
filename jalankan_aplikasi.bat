@@ -12,9 +12,13 @@ tasklist /FI "IMAGENAME eq mysqld.exe" 2>NUL | find /I /N "mysqld.exe">NUL
 if "%ERRORLEVEL%"=="0" (
     echo       MySQL sudah aktif berjalan.
 ) else (
-    if exist "C:\xampp\mysql\bin\mysqld.exe" (
+    if exist "C:\xampp\mysql_start.bat" (
         echo       Menjalankan MySQL XAMPP...
-        start "" /B "C:\xampp\mysql\bin\mysqld.exe" --defaults-file="C:\xampp\mysql\bin\my.ini" --standalone
+        start "MySQL Daemon" /min cmd /c "call C:\xampp\mysql_start.bat"
+        timeout /t 3 /nobreak >nul
+    ) else if exist "C:\xampp\mysql\bin\mysqld.exe" (
+        echo       Menjalankan MySQL XAMPP...
+        start "MySQL Daemon" /min cmd /c "cd /d C:\xampp && mysql\bin\mysqld.exe --defaults-file=mysql\bin\my.ini --standalone"
         timeout /t 3 /nobreak >nul
     ) else (
         echo       [PERINGATAN] Pastikan layanan MySQL di XAMPP/Laragon sudah dijalankan!

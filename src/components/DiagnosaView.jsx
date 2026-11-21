@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { 
   Activity, 
   Wrench, 
@@ -86,6 +86,7 @@ export default function DiagnosaView({
   const [diagnosisResult, setDiagnosisResult] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showReasoningModal, setShowReasoningModal] = useState(false);
+  const resultRef = useRef(null);
 
   const selectedMachine = useMemo(() => {
     return machines.find(m => m.id === selectedMachineId) || machines[0];
@@ -133,43 +134,54 @@ export default function DiagnosaView({
 
   const handleRunDiagnosa = () => {
     if (selectedGejala.length === 0) {
-      alert('Pilih minimal satu indikasi gejala kerusakan.');
       return;
     }
 
     setIsProcessing(true);
     setTimeout(() => {
-      const result = runForwardChaining({
-        selectedGejalaIds: selectedGejala,
-        rules,
-        kerusakanList,
-        selectedMachineId
-      });
+      try {
+        const result = runForwardChaining({
+          selectedGejalaIds: selectedGejala,
+          rules,
+          kerusakanList,
+          selectedMachineId
+        });
 
-      setDiagnosisResult(result);
-      setIsProcessing(false);
+        setDiagnosisResult(result);
+        setIsProcessing(false);
 
-      if (result.success && result.topDiagnosis) {
-        const newRecord = {
-          id: `DIAG-${Date.now().toString().slice(-4)}`,
-          idUser: currentUser?.id || 'U01',
-          namaUser: currentUser?.nama || 'Operator',
-          idMesin: selectedMachine.id,
-          namaMesin: selectedMachine.nama,
-          gejalaTerpilih: selectedGejala,
-          idKerusakan: result.topDiagnosis.kodeKerusakan,
-          namaKerusakan: result.topDiagnosis.namaKerusakan,
-          tingkat: result.topDiagnosis.tingkat,
-          persentase: result.topDiagnosis.percentage,
-          solusi: result.topDiagnosis.solusi,
-          waktu: new Date().toLocaleString('id-ID'),
-          statusPanggilan: result.topDiagnosis.butuhTeknisi ? 'Menunggu Teknisi' : 'Mandiri Selesai',
-          catatanOperator: `Diagnosa Forward Chaining (${result.topDiagnosis.matchedSymptoms.length} gejala terkonfirmasi)`
-        };
+        // Auto-scroll ke blok hasil diagnosa agar pengguna langsung melihat kesimpulan
+        setTimeout(() => {
+          if (resultRef.current) {
+            resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
 
-        if (onSaveDiagnosa) {
-          onSaveDiagnosa(newRecord);
+        if (result.success && result.topDiagnosis) {
+          const newRecord = {
+            id: `DIAG-${Date.now().toString().slice(-4)}`,
+            idUser: currentUser?.id || 'U01',
+            namaUser: currentUser?.nama || 'Operator',
+            idMesin: selectedMachine?.id || selectedMachineId || 'M01',
+            namaMesin: selectedMachine?.nama || 'Mesin Produksi',
+            gejalaTerpilih: selectedGejala,
+            idKerusakan: result.topDiagnosis.kodeKerusakan,
+            namaKerusakan: result.topDiagnosis.namaKerusakan,
+            tingkat: result.topDiagnosis.tingkat,
+            persentase: result.topDiagnosis.percentage,
+            solusi: result.topDiagnosis.solusi,
+            waktu: new Date().toLocaleString('id-ID'),
+            statusPanggilan: result.topDiagnosis.butuhTeknisi ? 'Menunggu Teknisi' : 'Mandiri Selesai',
+            catatanOperator: `Diagnosa Forward Chaining (${result.topDiagnosis.matchedSymptoms.length} gejala terkonfirmasi)`
+          };
+
+          if (onSaveDiagnosa) {
+            onSaveDiagnosa(newRecord);
+          }
         }
+      } catch (err) {
+        console.error('Error saat evaluasi Forward Chaining:', err);
+        setIsProcessing(false);
       }
     }, 250);
   };
@@ -239,6 +251,13 @@ export default function DiagnosaView({
                     onClick={() => {
                       setSelectedMachineId(mesin.id);
                       setDiagnosisResult(null);
+                      // Otomatis sinkronkan gejala awal untuk mesin ini
+                      const machineGejalas = gejalaList.filter(g => g.mesinId === mesin.id);
+                      if (machineGejalas.length > 0) {
+                        setSelectedGejala([machineGejalas[0].kode]);
+                      } else {
+                        setSelectedGejala([]);
+                      }
                     }}
                     className={`p-3 rounded-lg cursor-pointer transition text-left border ${
                       isSelected
@@ -392,18 +411,25 @@ export default function DiagnosaView({
             {/* Bottom Actions */}
             <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="text-xs text-slate-600">
-                Terpilih: <strong className="font-mono text-slate-900">{selectedGejala.length}</strong> gejala
-                {selectedGejala.length > 0 && (
-                  <span className="text-slate-400 font-mono ml-1.5 text-[11px]">
-                    ({selectedGejala.join(', ')})
+                {selectedGejala.length === 0 ? (
+                  <span className="text-amber-600 font-medium flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    Pilih minimal 1 gejala di atas untuk mendiagnosa
                   </span>
+                ) : (
+                  <>
+                    Terpilih: <strong className="font-mono text-slate-900">{selectedGejala.length}</strong> gejala
+                    <span className="text-slate-400 font-mono ml-1.5 text-[11px]">
+                      ({selectedGejala.join(', ')})
+                    </span>
+                  </>
                 )}
               </div>
 
               <button
                 onClick={handleRunDiagnosa}
                 disabled={isProcessing || selectedGejala.length === 0}
-                className="w-full sm:w-auto px-5 py-2 rounded-lg font-semibold text-xs text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-40 transition active:scale-[0.99] flex items-center justify-center gap-2 shadow-sm"
+                className="w-full sm:w-auto px-5 py-2 rounded-lg font-semibold text-xs text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition active:scale-[0.99] flex items-center justify-center gap-2 shadow-sm"
               >
                 {isProcessing ? (
                   <>
@@ -424,7 +450,7 @@ export default function DiagnosaView({
 
       {/* HASIL DIAGNOSA KELUARAN */}
       {diagnosisResult && (
-        <div className="bg-white border border-slate-300 rounded-xl p-5 shadow-sm space-y-5 animate-fadeIn">
+        <div ref={resultRef} className="bg-white border border-slate-300 rounded-xl p-5 shadow-sm space-y-5 animate-fadeIn scroll-mt-20">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div>
               <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
